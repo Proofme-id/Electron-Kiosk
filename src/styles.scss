@@ -1,4 +1,14 @@
 /* You can add global styles to this file, and also import other style files */
+@import './node_modules/bootstrap/scss/bootstrap.scss';
+// regular style toast
+@import '~ngx-toastr/toastr';
+
+// if you'd like to use it without importing all of bootstrap it requires
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+@import '~bootstrap/scss/mixins';
+@import '~ngx-toastr/toastr-bs4-alert';
+
 html, body {
   margin: 0;
   padding: 0;
@@ -7,8 +17,7 @@ html, body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* CAN (MUST) BE REMOVED ! Sample Global style */
-.container {
+.main-container {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -16,8 +25,8 @@ html, body {
   justify-content: center;
 
   background: url(./assets/background.jpg) no-repeat center fixed;
-  -webkit-background-size: cover; /* pour anciens Chrome et Safari */
-  background-size: cover; /* version standardisée */
+  -webkit-background-size: cover;
+  background-size: cover;
 
   .title {
     color: white;
@@ -29,7 +38,7 @@ html, body {
     color: #fff !important;
     text-transform: uppercase;
     text-decoration: none;
-    background: #ed3330;
+    background: var(--success);
     padding: 20px;
     border-radius: 5px;
     display: inline-block;
@@ -38,7 +47,7 @@ html, body {
 
     &:hover {
       background: #fff;
-      color: #ed3330 !important;
+      color: var(--success) !important;
       letter-spacing: 1px;
       -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
       -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);

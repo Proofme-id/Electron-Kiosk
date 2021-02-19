@@ -1,0 +1,13 @@
+{
+	"PAGES": {
+		"DETAIL": {
+			"BACK_TO_HOME": "Terug",
+			"TITLE": "Details"
+		},
+		"HOME": {
+			"GO_TO_DETAIL": "Ga naar details",
+			"OPEN_DOOR": "Open deur",
+			"TITLE": "Home"
+		}
+	}
+}

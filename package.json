@@ -1,11 +1,11 @@
 {
-  "name": "angular-electron",
+  "name": "proofmeid-kiosk",
   "version": "9.0.4",
-  "description": "Angular 11 with Electron (Typescript + SASS + Hot Reload)",
-  "homepage": "https://github.com/maximegris/angular-electron",
+  "description": "The ProofMe.id Kiosk",
+  "homepage": "https://github.com/Proofme-id/Electron-Kiosk",
   "author": {
-    "name": "Maxime GRIS",
-    "email": "maxime.gris@gmail.com"
+    "name": "Didux.io",
+    "email": "info@didux.io"
   },
   "keywords": [
     "angular",
@@ -23,7 +23,7 @@
   "main": "main.js",
   "private": true,
   "scripts": {
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "DEBUG=electron-builder electron-builder install-app-deps && ELECTRON_GET_USE_PROXY=true electron-rebuild",
     "ng": "ng",
     "start": "npm-run-all -p electron:serve ng:serve",
     "build": "npm run electron:serve-tsc && ng build --base-href ./",
@@ -38,7 +38,17 @@
     "test:watch": "ng test",
     "e2e": "npm run build:prod && cross-env TS_NODE_PROJECT='e2e/tsconfig.e2e.json' mocha --timeout 300000 --require ts-node/register e2e/**/*.e2e.ts",
     "version": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "sonar": "sonar-scanner",
+    "translations": "ngx-translate-extract --input ./src --output ./src/assets/i18n/nl.json ./src/assets/i18n/en.json --clean --sort --format namespaced-json --marker _",
+    "translations:add": "git add ./src/assets/i18n"
+  },
+  "pre-commit": {
+    "run": [
+      "lint",
+      "translations",
+      "translations:add"
+    ]
   },
   "dependencies": {},
   "devDependencies": {
@@ -74,6 +84,7 @@
     "cross-env": "7.0.3",
     "electron": "11.2.0",
     "electron-builder": "22.9.1",
+    "electron-rebuild": "^1.11.0",
     "electron-reload": "1.5.0",
     "eslint": "7.20.0",
     "eslint-plugin-import": "2.22.1",
@@ -95,7 +106,15 @@
     "typescript": "4.0.5",
     "wait-on": "5.0.1",
     "webdriver-manager": "12.1.8",
-    "zone.js": "0.10.3"
+    "zone.js": "0.10.3",
+    "@types/node-hid": "^1.3.0",
+    "node-hid": "^2.1.1",
+    "node-wifi": "^2.0.13",
+    "ngx-bootstrap": "6.2.0",
+    "ngx-toastr": "13.1.0",
+    "bootstrap": "4.5.3",
+    "@biesbjerg/ngx-translate-extract-marker": "^1.0.0",
+    "@biesbjerg/ngx-translate-extract": "^7.0.3"
   },
   "engines": {
     "node": ">=10.13.0"

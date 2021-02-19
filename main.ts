@@ -1,8 +1,11 @@
-import { app, BrowserWindow, screen } from 'electron';
+import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
+// import * as HID from 'node-hid';
+const HID = require('node-hid');
 
 let win: BrowserWindow = null;
+let relay = null;
 const args = process.argv.slice(1),
   serve = args.some(val => val === '--serve');
 
@@ -76,8 +79,137 @@ try {
       createWindow();
     }
   });
-
 } catch (e) {
   // Catch Error
   // throw e;
 }
+
+try {
+  const devices = HID.devices();
+  const connectedRelays = devices.filter(device => {
+    return device.product && device.product.indexOf("USBRelay") !== -1;
+  });
+  if (!connectedRelays.length) {
+    console.error('No USB Relays are connected.');
+  } else {
+    console.log(connectedRelays);
+    relay = new HID.HID(connectedRelays[0].path);
+    console.log("Connected to relay:", connectedRelays[0].product)
+  }
+} catch (e) {
+  console.log("Could not switch relay:", e)
+}
+
+function setState(port, state) {
+  // Byte 0 = Report ID
+  // Byte 1 = State
+  // Byte 2 = Relay
+  // Bytes 3-8 = Padding
+
+  // index 0 turns all the relays on or off
+  var relayOn = [
+    [0x00, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFF, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFF, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFF, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFF, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFF, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFF, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFF, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+  ];
+
+  var relayOff = [
+    [0x00, 0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFD, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFD, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFD, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFD, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFD, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFD, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFD, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+    [0x00, 0xFD, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+  ];
+
+  var command = null;
+
+  if (state)
+  {
+    command = relayOn[port];
+  }
+  else
+  {
+    command = relayOff[port];
+  }
+
+  relay.sendFeatureReport(command);
+}
+
+ipcMain.on('findRelays', (event, arg) => {
+  try {
+    console.log('Search relays')
+    const devices = HID.devices();
+    const connectedRelays = devices.filter(device => {
+      return device.product && device.product.indexOf("USBRelay") !== -1;
+    });
+    event.returnValue = connectedRelays;
+  } catch (e) {
+    console.log("Search failed: ", e)
+    event.returnValue = 'error'
+  }
+})
+
+ipcMain.on('setActiveRelay', (event, path) => {
+  try {
+    console.log('Search relay by path:', path);
+    const devices = HID.devices();
+    const connectedRelays = devices.filter(device => device.path === path);
+    if (!connectedRelays.length) {
+      console.error('No USB Relays are connected.');
+      event.returnValue = 'error'
+    } else {
+      if (relay) {
+        relay.close();
+      }
+      console.log(connectedRelays);
+      relay = new HID.HID(connectedRelays[0].path);
+      console.log("Connected to relay:", connectedRelays[0].product)
+      event.returnValue = 'ok';
+    }
+  } catch (e) {
+    console.log("Search failed: ", e)
+    event.returnValue = 'error'
+  }
+})
+
+ipcMain.on('switchActiveRelayOff', (event, slot) => {
+  try {
+    console.log('Deactivate ' + slot)
+    if (relay != undefined) {
+      setState(slot, false);
+      event.returnValue = 'ok'
+    } else {
+      event.returnValue = 'nok'
+    }
+  } catch (e) {
+    console.log("switchActiveRelayOff failed: ", e)
+    relay = undefined
+    event.returnValue = 'nok'
+  }
+})
+
+ipcMain.on('switchActiveRelayOn', (event, slot) => {
+  try {
+    console.log('Activate ' + slot)
+    if (relay != undefined) {
+      setState(slot, true);
+      event.returnValue = 'ok'
+    } else {
+      event.returnValue = 'nok'
+    }
+  } catch (e) {
+    console.log("switchActiveRelayOn failed: ", e)
+    relay = undefined
+    event.returnValue = 'nok'
+  }
+})
