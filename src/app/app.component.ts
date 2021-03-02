@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { DOCUMENT } from "@angular/common";
+import { Component, Inject, LOCALE_ID } from '@angular/core';
 import { ElectronService } from './core/services';
 import { TranslateService } from '@ngx-translate/core';
 import { AppConfig } from '../environments/environment';
@@ -11,9 +12,12 @@ import { AppConfig } from '../environments/environment';
 export class AppComponent {
   constructor(
     private electronService: ElectronService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    @Inject(LOCALE_ID) locale: string,
+    @Inject(DOCUMENT) private document: Document
   ) {
     this.translate.setDefaultLang('en');
+    this.document.documentElement.lang = 'en';
     console.log('AppConfig', AppConfig);
 
     if (electronService.isElectron) {
