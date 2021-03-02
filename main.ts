@@ -99,10 +99,10 @@ try {
   } else {
     console.log(connectedRelays);
     relay = new HID.HID(connectedRelays[0].path);
-    console.log("Connected to relay:", connectedRelays[0].product)
+    console.log("Connected to relay:", connectedRelays[0].product);
   }
 } catch (e) {
-  console.log("Could not switch relay:", e)
+  console.log("Could not switch relay:", e);
 }
 
 function setState(port, state) {
@@ -112,7 +112,7 @@ function setState(port, state) {
   // Bytes 3-8 = Padding
 
   // index 0 turns all the relays on or off
-  var relayOn = [
+  const relayOn = [
     [0x00, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
     [0x00, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
     [0x00, 0xFF, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -124,7 +124,7 @@ function setState(port, state) {
     [0x00, 0xFF, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
   ];
 
-  var relayOff = [
+  const relayOff = [
     [0x00, 0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
     [0x00, 0xFD, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
     [0x00, 0xFD, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
@@ -136,7 +136,7 @@ function setState(port, state) {
     [0x00, 0xFD, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
   ];
 
-  var command = null;
+  let command = null;
 
   if (state)
   {
@@ -150,19 +150,19 @@ function setState(port, state) {
   relay.sendFeatureReport(command);
 }
 
-ipcMain.on('findRelays', (event, arg) => {
+ipcMain.on('findRelays', (event) => {
   try {
-    console.log('Search relays')
+    console.log('Search relays');
     const devices = HID.devices();
     const connectedRelays = devices.filter(device => {
       return device.product && device.product.indexOf("USBRelay") !== -1;
     });
     event.returnValue = connectedRelays;
   } catch (e) {
-    console.log("Search failed: ", e)
-    event.returnValue = 'error'
+    console.log("Search failed: ", e);
+    event.returnValue = 'error';
   }
-})
+});
 
 ipcMain.on('setActiveRelay', (event, path) => {
   try {
@@ -171,64 +171,64 @@ ipcMain.on('setActiveRelay', (event, path) => {
     const connectedRelays = devices.filter(device => device.path === path);
     if (!connectedRelays.length) {
       console.error('No USB Relays are connected.');
-      event.returnValue = 'error'
+      event.returnValue = 'error';
     } else {
       if (relay) {
         relay.close();
       }
       console.log(connectedRelays);
       relay = new HID.HID(connectedRelays[0].path);
-      console.log("Connected to relay:", connectedRelays[0].product)
+      console.log("Connected to relay:", connectedRelays[0].product);
       event.returnValue = 'ok';
     }
   } catch (e) {
-    console.log("Search failed: ", e)
-    event.returnValue = 'error'
+    console.log("Search failed: ", e);
+    event.returnValue = 'error';
   }
-})
+});
 
 ipcMain.on('switchActiveRelayOff', (event, slot) => {
   try {
-    console.log('Deactivate ' + slot)
+    console.log('Deactivate ', slot);
     if (relay != undefined) {
       setState(slot, false);
-      event.returnValue = 'ok'
+      event.returnValue = 'ok';
     } else {
-      event.returnValue = 'nok'
+      event.returnValue = 'nok';
     }
   } catch (e) {
-    console.log("switchActiveRelayOff failed: ", e)
-    relay = undefined
-    event.returnValue = 'nok'
+    console.log("switchActiveRelayOff failed: ", e);
+    relay = undefined;
+    event.returnValue = 'nok';
   }
-})
+});
 
 ipcMain.on('switchActiveRelayOn', (event, slot) => {
   try {
-    console.log('Activate ' + slot)
+    console.log('Activate ', slot);
     if (relay != undefined) {
       setState(slot, true);
-      event.returnValue = 'ok'
+      event.returnValue = 'ok';
     } else {
-      event.returnValue = 'nok'
+      event.returnValue = 'nok';
     }
   } catch (e) {
-    console.log("switchActiveRelayOn failed: ", e)
-    relay = undefined
-    event.returnValue = 'nok'
+    console.log("switchActiveRelayOn failed: ", e);
+    relay = undefined;
+    event.returnValue = 'nok';
   }
-})
+});
 
 
 // Storage commands
 ipcMain.on('setKey', (event, update) => {
   try {
     store.set(update.key, update.value);
-    event.returnValue = 'ok'
+    event.returnValue = 'ok';
   } catch (e) {
-    event.returnValue = 'nok'
+    event.returnValue = 'nok';
   }
-})
+});
 
 ipcMain.on('getKey', (event, key) => {
   try {
@@ -236,7 +236,7 @@ ipcMain.on('getKey', (event, key) => {
   } catch (e) {
     event.returnValue = null;
   }
-})
+});
 
 ipcMain.on('hasKey', (event, key) => {
   try {
@@ -244,4 +244,4 @@ ipcMain.on('hasKey', (event, key) => {
   } catch (e) {
     event.returnValue = false;
   }
-})
+});
