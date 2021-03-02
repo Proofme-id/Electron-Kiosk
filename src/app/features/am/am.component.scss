@@ -1,0 +1,51 @@
+:host {
+  .overlay-message {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+  }
+
+  .overlay-message-background {
+    background: #002c49;
+    opacity: 0.5;
+    width: 100%;
+    height: 100%;
+  }
+
+  .overlay-message-popup {
+    border-radius: 8px;
+    width: 500px;
+    max-width: 90vw;
+    height: 300px;
+    max-height: 90vh;
+    background: var(--white);
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .message-logo {
+    width: 230px;
+    height: 200px;
+    padding-right: 30px;
+  }
+
+  .message-text-success {
+    padding-top: 16px;
+    font-weight: 600;
+    color: var(--success)
+  }
+
+  .message-text-error {
+    padding-top: 16px;
+    font-weight: 600;
+    color: var(--danger)
+  }
+
+}

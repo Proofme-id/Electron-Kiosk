@@ -1,0 +1,33 @@
+<div class="main-container">
+  <div class="main-view-div" [hidden]="accessGranted || accessDenied">
+    <div class="qr-code fixed-width">
+      <div>
+        <div *ngIf="websocketDisconnected" class="disconnect-overlay" (click)="refreshWebsocketDisconnect()">
+          <p>{{ 'AM.disconnected' | translate }}</p>
+        </div>
+        <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #qrCodeCanvas></canvas>
+      </div>
+      <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code' | translate }}</p>
+    </div>
+  </div>
+
+  <div class="overlay-message" *ngIf="accessGranted && !accessDenied">
+    <div class="overlay-message-background"></div>
+    <div class="overlay-message-popup">
+      <img src="/assets/img/undraw_door.svg" class="message-logo" alt="Welcome">
+      <p class="message-text-success">{{ 'AM.success-message' | translate }}</p>
+    </div>
+  </div>
+
+  <div class="overlay-message" *ngIf="!accessGranted && accessDenied">
+    <div class="overlay-message-background"></div>
+    <div class="overlay-message-popup">
+      <img src="/assets/img/undraw_access_denied.svg" class="message-logo" alt="Access denied">
+      <p class="message-text-error">{{ 'AM.error-message' | translate }}</p>
+    </div>
+  </div>
+
+</div>
+
+
+

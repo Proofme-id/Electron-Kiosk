@@ -7,8 +7,9 @@
     "types": []
   },
   "include": [
-    "main.ts",
-    "polyfill.ts"
+      "main.ts",
+      "polyfill.ts",
+      "app/interfaces/storage-key.interface.ts"
   ],
   "exclude": [
     "**/*.spec.ts"

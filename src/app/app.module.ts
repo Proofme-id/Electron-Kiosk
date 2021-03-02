@@ -2,7 +2,13 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { NgxsModule } from "@ngxs/store";
+import { ProofmeUtilsProvider, WebRtcProvider } from "@proofmeid/webrtc-web/proofmeid-webrtc-web";
+import { AppConfig } from "../environments/environment";
 import { CoreModule } from './core/core.module';
+import { AmModule } from "./features/am/am.module";
+import { StorageProvider } from "./providers/storage-provider.service";
+import { RelayProvider } from "./providers/relay-provider.service";
 import { SharedModule } from './shared/shared.module';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -11,10 +17,11 @@ import { AppRoutingModule } from './app-routing.module';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
-import { HomeModule } from './home/home.module';
-import { DetailModule } from './detail/detail.module';
+import { HomeModule } from './features/home/home.module';
+import { ConfigModule } from "./features/config/config.module";
 
 import { AppComponent } from './app.component';
+import { AppStateModule } from "./state/app/app.module";
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
@@ -29,8 +36,12 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
     HttpClientModule,
     CoreModule,
     SharedModule,
+    NgxsModule.forRoot([], {
+      developmentMode: !AppConfig.production
+    }),
     HomeModule,
-    DetailModule,
+    ConfigModule,
+    AmModule,
     AppRoutingModule,
     TranslateModule.forRoot({
       loader: {
@@ -38,9 +49,15 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
         useFactory: HttpLoaderFactory,
         deps: [HttpClient]
       }
-    })
+    }),
+    AppStateModule
   ],
-  providers: [],
+  providers: [
+    StorageProvider,
+    RelayProvider,
+    WebRtcProvider,
+    ProofmeUtilsProvider
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule {}

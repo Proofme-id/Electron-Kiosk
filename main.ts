@@ -1,7 +1,7 @@
 import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
-// import * as HID from 'node-hid';
+const ElectronStore = require("electron-store");
 const HID = require('node-hid');
 
 let win: BrowserWindow = null;
@@ -83,6 +83,11 @@ try {
   // Catch Error
   // throw e;
 }
+
+
+// Store
+console.log("Get config from: ", app.getPath('userData'));
+const store = new ElectronStore();
 
 try {
   const devices = HID.devices();
@@ -211,5 +216,32 @@ ipcMain.on('switchActiveRelayOn', (event, slot) => {
     console.log("switchActiveRelayOn failed: ", e)
     relay = undefined
     event.returnValue = 'nok'
+  }
+})
+
+
+// Storage commands
+ipcMain.on('setKey', (event, update) => {
+  try {
+    store.set(update.key, update.value);
+    event.returnValue = 'ok'
+  } catch (e) {
+    event.returnValue = 'nok'
+  }
+})
+
+ipcMain.on('getKey', (event, key) => {
+  try {
+    event.returnValue = store.get(key);
+  } catch (e) {
+    event.returnValue = null;
+  }
+})
+
+ipcMain.on('hasKey', (event, key) => {
+  try {
+    event.returnValue = store.has(key);
+  } catch (e) {
+    event.returnValue = false;
   }
 })

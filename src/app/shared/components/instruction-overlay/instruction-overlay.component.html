@@ -1,0 +1,7 @@
+<div class="overlay-instruction" *ngIf="(showExternalInstruction$ | async)">
+    <div class="overlay-instruction-background"></div>
+    <div class="overlay-instruction-popup">
+        <img src="/assets/img/mobile.svg" class="mobile-logo" alt="Mobile">
+        <p class="mobile-instructions-text">{{ 'INSTRUCTION_OVERLAY.message' | translate }}</p>
+    </div>
+</div>

@@ -1,12 +1,21 @@
 {
+	"AM": {
+		"disconnected": "Disconnected! Click to refresh",
+		"error-message": "Access denied!",
+		"scan_code": "Scan the QR-code with the ProofMe App.",
+		"success-message": "Welcome!"
+	},
+	"INSTRUCTION_OVERLAY": {
+		"message": "Follow the instructions in the app"
+	},
 	"PAGES": {
-		"DETAIL": {
-			"BACK_TO_HOME": "Back to Home",
-			"TITLE": "Detail page !"
+		"BACK_TO_HOME": "Back to home",
+		"CONFIG": {
+			"TITLE": "Config"
 		},
+		"GO_TO_AM": "Accessmanagement",
+		"GO_TO_CONFIG": "Config",
 		"HOME": {
-			"GO_TO_DETAIL": "Go to Detail",
-			"OPEN_DOOR": "Open door!",
 			"TITLE": "App works !"
 		}
 	}

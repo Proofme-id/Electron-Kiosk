@@ -1,12 +1,21 @@
 {
+	"AM": {
+		"disconnected": "Disconnected! klik om te verversen",
+		"error-message": "Geen toegang!",
+		"scan_code": "Scan de Qr met de ProofMe App.",
+		"success-message": "Welkom!"
+	},
+	"INSTRUCTION_OVERLAY": {
+		"message": "Volg de instructies in de app"
+	},
 	"PAGES": {
-		"DETAIL": {
-			"BACK_TO_HOME": "Terug",
-			"TITLE": "Details"
+		"BACK_TO_HOME": "Terug",
+		"CONFIG": {
+			"TITLE": "Config"
 		},
+		"GO_TO_AM": "Toegangscontrole",
+		"GO_TO_CONFIG": "Instellingen",
 		"HOME": {
-			"GO_TO_DETAIL": "Ga naar details",
-			"OPEN_DOOR": "Open deur",
 			"TITLE": "Home"
 		}
 	}
