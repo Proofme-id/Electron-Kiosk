@@ -72,10 +72,10 @@
     "ngx-toggle-button": "0.5.2",
     "ngx-translate-messageformat-compiler": "4.9.0",
     "ngx-ui-switch": "10.0.2",
+    "node-hid": "^2.1.1",
     "node-pre-gyp": "0.17.0",
     "readable-stream": "2.3.7",
-    "tiny-date-picker": "*",
-    "node-hid": "^2.1.1"
+    "tiny-date-picker": "*"
   },
   "devDependencies": {
     "@angular-builders/custom-webpack": "11.0.0",
