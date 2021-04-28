@@ -25,4 +25,8 @@ export class StorageProvider {
   deleteKey(key: string): string {
     return this.electronService.ipcRenderer.sendSync('deleteKey', key)
   }
+
+  deleteAllStored(): string {
+    return this.electronService.ipcRenderer.sendSync('deleteAllStored')
+  }
 }

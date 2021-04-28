@@ -39,7 +39,7 @@ export class HomeComponent extends BaseComponent implements OnInit {
 
   @ViewChild("qrCodeCanvas")
   qrCodeCanvas: ElementRef;
-  selectedCountryCode = this.StorageProvider.getKey('language') === "en" ? "gb" : this.StorageProvider.getKey('language');
+  selectedCountryCode = this.StorageProvider.getKey('language') === "en" ? "gb" : (this.StorageProvider.getKey('language') ? this.StorageProvider.getKey('language') : "gb");
   countryCodes = ['gb', 'nl'];
   customLabels: Record<string, string> = {
     "gb": "English",

@@ -253,3 +253,11 @@ ipcMain.on('deleteKey', (event, key) => {
     event.returnValue = false;
   }
 })
+
+ipcMain.on('deleteAllStored', (event, key) => {
+  try {
+    event.returnValue = store.clear();
+  } catch (e) {
+    event.returnValue = false;
+  }
+})

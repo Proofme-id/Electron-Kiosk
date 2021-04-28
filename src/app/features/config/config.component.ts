@@ -9,6 +9,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { marker as _ } from "@biesbjerg/ngx-translate-extract-marker";
+import { Router } from '@angular/router';
 
 var logLines: logInfo[] = [];
 
@@ -99,6 +100,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   showLogsWelcome: boolean;
 
   constructor(
+    private router: Router,
     private appStateFacade: AppStateFacade,
     private webRtcProvider: WebRtcProvider,
     private ngZone: NgZone,
@@ -138,12 +140,10 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   saveSettings(): void {
-    this.StorageProvider.setKey("Custom", {
+    this.StorageProvider.setKey("Credentials", {
       AIR_TICKET: this.airChecked,
       SOC_TICKET: this.socChecked,
-      FES_TICKET: this.fesChecked
-    })
-    this.StorageProvider.setKey("Health", {
+      FES_TICKET: this.fesChecked,
       VTEST_COR_PCR: this.pcrChecked,
       VTEST_COR_ANTIGEEN: this.antiChecked,
       VTEST_COR_LAMP: this.lampChecked,
@@ -155,6 +155,9 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   ngOnInit(): void {
     this.getCorrectValues();
     this.setupWebRtc("regular");
+    if (!this.existsData('firstStartupCompleted')) {
+      this.router.navigate(['/home'])
+    }
   }
 
   getRightDateAndLogs(event) {

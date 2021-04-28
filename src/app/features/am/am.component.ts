@@ -6,6 +6,7 @@ import { RelayProvider } from "../../providers/relay-provider.service";
 import { BaseComponent } from "../../shared/components";
 import { AppStateFacade } from "../../state/app/app.facade";
 import { StorageProvider } from '../../providers/storage-provider.service'
+import { Router } from '@angular/router';
 const log = window['require']('electron-log') 
 
 @Component({
@@ -27,6 +28,7 @@ export class AmComponent extends BaseComponent implements OnInit {
   whitelist = this.StorageProvider.getKey("whitelistedUsers")
 
   constructor(
+    private router: Router,
     private relayProvider: RelayProvider,
     private webRtcProvider: WebRtcProvider,
     private appStateFacade: AppStateFacade,
@@ -48,6 +50,9 @@ export class AmComponent extends BaseComponent implements OnInit {
   ngOnInit(): void {
     this.storeRightTrustedAuthorities()
     this.setupWebRtc();
+    if (!this.existsData('firstStartupCompleted')) {
+      this.router.navigate(['/home'])
+    }
   }
 
   openDoor(slot) {
@@ -119,11 +124,9 @@ export class AmComponent extends BaseComponent implements OnInit {
       if (data.action === "disconnect") {
         this.appStateFacade.setShowExternalInstruction(false);
         this.websocketDisconnected = true;
-        if (!this.accessGranted && !this.accessDenied) {
-          setTimeout(() => {
-            this.refreshWebsocketDisconnect()
-          }, 1000);
-        }
+        setTimeout(() => {
+          this.refreshWebsocketDisconnect()
+        }, 1000);
       }
     });
   }
@@ -131,9 +134,12 @@ export class AmComponent extends BaseComponent implements OnInit {
 
   requestData(): IRequestedCredentials {
     let request: IRequestedCredentials;
-    let customAndHealth: boolean[] = [].concat(this.StorageProvider.getKey("Custom"), this.StorageProvider.getKey("Health"))
+    let credentials: boolean[]
+    if (this.StorageProvider.getKey("credentials")) {
+      credentials = this.StorageProvider.getKey("Credentials")
+    } else { return request; }
 
-    if (customAndHealth && !this.StorageProvider.hasKey("WhitelistEnabled")) {
+    if (credentials && !this.StorageProvider.hasKey("WhitelistEnabled")) {
       const allCredentials = [
         {
           key: "AIR_TICKET",
@@ -187,8 +193,8 @@ export class AmComponent extends BaseComponent implements OnInit {
         "VPASS_COR_MODERNA",
         "VPASS_COR_PFIZER"
       ]
-      const allFiltered = [].concat(allCredentials.filter(x => customAndHealth[0][x.key] === true), allCredentials.filter(x => customAndHealth[1][x.key] === true))
-      const filteredMinRequired = healthMinRequired.filter(x => customAndHealth[1][x] === true)
+      const allFiltered = [].concat(allCredentials.filter(x => credentials[0][x.key] === true), allCredentials.filter(x => credentials[1][x.key] === true))
+      const filteredMinRequired = healthMinRequired.filter(x => credentials[1][x] === true)
 
       request = {
         by: "Kiosk",
