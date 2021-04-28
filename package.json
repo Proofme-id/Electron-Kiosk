@@ -78,8 +78,7 @@
     "ngx-ui-switch": "10.0.2",
     "node-hid": "^2.1.1",
     "node-pre-gyp": "0.17.0",
-    "readable-stream": "2.3.7",
-    "tiny-date-picker": "*"
+    "readable-stream": "2.3.7"
   },
   "devDependencies": {
     "@angular-builders/custom-webpack": "11.0.0",
