@@ -18,6 +18,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Install libusb
+        run: sudo apt-get install libusb-1.0-0-dev
       - run: npm ci
       - run: npm run sonar -- -Dsonar.host.url=${{ secrets.SONARQUBE_HOST }} -Dsonar.login=${{ secrets.SONARQUBE_TOKEN }} -Dsonar.projectVersion=${{ github.run_number }} -Dsonar.projectKey=${{ github.event.repository.name }}
       - uses: 8398a7/action-slack@v3
