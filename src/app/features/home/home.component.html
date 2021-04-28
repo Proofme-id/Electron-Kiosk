@@ -1,5 +1,25 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css"
+  integrity="sha512-Cv93isQdFwaKBV+Z4X8kaVBYWHST58Xb/jVOcV9aRsGSArZsgAnFIhMpDoMDcFNoUtday1hdjn0nGp3+KZyyFw=="
+  crossorigin="anonymous" />
 <div class="main-container">
-  <div class="container">
+  <div class="content-div row" [hidden]="existsData('firstStartupCompleted')">
+    <div class="col-xl-12 content-div mx-auto">
+      <div class="card shadow mb-4 align-items-center">
+        <div class="card-body text-center">
+          <div class="logo relative py-3 d-flex flex-row align-items-center">
+            <canvas #qrCodeCanvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''"></canvas>
+          </div>
+          <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code' | translate }}</p>
+          <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code2' | translate }}</p>
+
+        </div>
+        <ngx-flag-picker [customLabels]="customLabels" [selectedCountryCode]="selectedCountryCode"
+          [countryCodes]="countryCodes" (changedCountryCode)="changeSelectedCountryCode($event)"></ngx-flag-picker>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" *ngIf="existsData('firstStartupCompleted')">
     <h1 class="title">
       {{ 'PAGES.HOME.TITLE' | translate }}
     </h1>

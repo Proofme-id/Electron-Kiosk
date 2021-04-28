@@ -2,16 +2,92 @@
 	"AM": {
 		"disconnected": "Disconnected! Click to refresh",
 		"error-message": "Access denied!",
-		"scan_code": "Scan the QR-code with the ProofMe App.",
+		"error_no_data": "Error. No requested data.",
+		"no_requested_data": "Please select the data you'd like to request in the config.",
+		"scan_code": "Scan the QR-code with the",
+		"scan_code2": "ProofMe App.",
 		"success-message": "Welcome!"
+	},
+	"ATTRIBUTES": {
+		"CUSTOM": {
+			"airticket": "Airline ticket",
+			"festicket": "Festival ticket",
+			"socticket": "Soccer ticket"
+		},
+		"EMAIL": {
+			"email": "Email"
+		},
+		"HEALTH": {
+			"vpasscormodern": "VPASS Corona Modern",
+			"vpasscorpfizer": "VPASS Corona Pfizer",
+			"vtestcoranti": "VTEST Corona Antigeen",
+			"vtestcorlamp": "VTEST Corona Lamp",
+			"vtestcorpcr": "VTEST Corona PCR"
+		},
+		"PHONE": {
+			"phone": "Phone number"
+		}
+	},
+	"CNF": {
+		"MENU": {
+			"ADMINS": "Admins",
+			"AM": "Access",
+			"LOGS": "Logs",
+			"SETTINGS": "Settings"
+		},
+		"add": "Add",
+		"add_admin1": "Let the new Admin scan this QR-Code with",
+		"add_admin2": "their ProofMe.ID to become an new Admin",
+		"add_whitelist": "Add user",
+		"admin-recovered": "Successfully re-linked the admin privileges",
+		"admins": "These are the Administrators.",
+		"allow_demo": "Allow demo attributes?",
+		"allowed": "Allowed",
+		"already_exists": "This link already exists.",
+		"cancel": "Cancel",
+		"confirm": "Confirm",
+		"continue": "Continue",
+		"create": "Create",
+		"delete": "Delete",
+		"disabled": "Disabled",
+		"email_whitelist_1": "Enter the email which you want to add to the whitelist",
+		"email_whitelist_2": "Just like the following: \"someone@gmail.com\"",
+		"enabled": "Enabled",
+		"language": "Language:",
+		"linked_credential": "Linked credential",
+		"logout": "Logout",
+		"logs_message": "Message",
+		"logs_time": "Time",
+		"logs_type": "Type",
+		"logs_welcome_1": "Welcome to the logs.",
+		"logs_welcome_2": "Here you can see who's doing what in the application.",
+		"no_log_found_1": "No logs were found for this date.",
+		"no_log_found_2": "Please try a different date.",
+		"not_allowed": "Not allowed",
+		"offer_recovery": "It appears the email of this admin is linked to a different vault",
+		"offer_recovery2": "Would you like to link it to this vault?",
+		"phone_whitelist_1": "Enter the phone number which you want to add to the whitelist",
+		"phone_whitelist_2": "Just like the following: \"+31612345678\"",
+		"recover": "Recover",
+		"remove": "Remove",
+		"scan_code": "Scan the QR-Code with the ProofMe App to",
+		"scan_code2": "Proof you have admin privileges.",
+		"scan_recover": "To recover your admin privileges",
+		"settings": "These are the settings.",
+		"welcome_message1": "Welcome to the control panel.",
+		"welcome_message2": "Here you can see the logs, edit the current Admins, Accessmanagement and Settings.",
+		"which_credentials": "Allow which credentials?",
+		"whitelist": "Whitelist",
+		"type": "{type, select, warn{WARN} info{INFO} other{OTHER}}",
+		"message": "{type, select, 1{User {user} was denied access because of invalid credentials.} 2{User {user} logged into the configuration.} 3{User {user} was offered to recover their admin credentials.} 4{User {user} has recovered their admin credentials.} 5{User {user} was denied access to the configuration.} 6{User {user} was allowed access with a whitelist enabled. } 7{User {user} was denied access with a whitelist enabled. } other{Error. Related to {user}}}"
+
 	},
 	"INSTRUCTION_OVERLAY": {
 		"message": "Follow the instructions in the app"
 	},
 	"PAGES": {
-		"BACK_TO_HOME": "Back to home",
 		"CONFIG": {
-			"TITLE": "Config"
+			"TITLE": "Control panel"
 		},
 		"GO_TO_AM": "Accessmanagement",
 		"GO_TO_CONFIG": "Config",

@@ -11,11 +11,14 @@ import { StorageProvider } from "./providers/storage-provider.service";
 import { RelayProvider } from "./providers/relay-provider.service";
 import { SharedModule } from './shared/shared.module';
 
+import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
+import { fas } from '@fortawesome/free-solid-svg-icons';
 import { AppRoutingModule } from './app-routing.module';
 
 // NG Translate
-import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { TranslateModule, TranslateCompiler, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import {TranslateMessageFormatCompiler} from 'ngx-translate-messageformat-compiler';
 
 import { HomeModule } from './features/home/home.module';
 import { ConfigModule } from "./features/config/config.module";
@@ -36,6 +39,7 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
     HttpClientModule,
     CoreModule,
     SharedModule,
+    FontAwesomeModule,
     NgxsModule.forRoot([], {
       developmentMode: !AppConfig.production
     }),
@@ -48,7 +52,11 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
         provide: TranslateLoader,
         useFactory: HttpLoaderFactory,
         deps: [HttpClient]
-      }
+      },
+      compiler: {
+        provide: TranslateCompiler,
+        useClass: TranslateMessageFormatCompiler
+    }
     }),
     AppStateModule
   ],
@@ -60,4 +68,9 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
   ],
   bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule {
+
+  constructor(library: FaIconLibrary) {
+    library.addIconPacks(fas);
+  }
+}

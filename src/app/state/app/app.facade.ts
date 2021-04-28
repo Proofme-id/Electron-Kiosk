@@ -13,9 +13,9 @@ export class AppStateFacade {
 
     @Select(AppState.showExternalInstruction)
     showExternalInstruction$: Observable<boolean>;
-
+    
     constructor(
-        private store: Store
+        private store: Store,
     ) {}
 
     setLanguage(language: string): Observable<void> {

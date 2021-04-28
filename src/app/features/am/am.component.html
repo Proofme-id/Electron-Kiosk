@@ -1,5 +1,6 @@
 <div class="main-container">
-  <div class="main-view-div" [hidden]="accessGranted || accessDenied">
+  <div class="main-view-div" [hidden]="accessGranted || accessDenied"
+    [hidden]="!existsData('askHealth')  && !existsData('askCustom')">
     <div class="qr-code fixed-width">
       <div>
         <div *ngIf="websocketDisconnected" class="disconnect-overlay" (click)="refreshWebsocketDisconnect()">
@@ -8,13 +9,32 @@
         <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #qrCodeCanvas></canvas>
       </div>
       <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code' | translate }}</p>
+      <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code2' | translate }}</p>
     </div>
   </div>
+
+  <div *ngIf="!existsData('askHealth')  && !existsData('askCustom')">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
+        <h6 class="m-0 font-weight-bold text-primary">{{ 'AM.error_no_data' | translate }}</h6>
+      </div>
+      <div class="card-body d-flex justify-content-center">
+        <div class="no-data">
+          <p>{{ 'AM.no_requested_data' | translate }}</p>
+          <a routerLink="/config">{{ 'PAGES.GO_TO_CONFIG' | translate }}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a class="top-right-config-link" routerLink="/config">
+    <fa-icon [icon]="['fas', 'cog']"></fa-icon>
+  </a>
 
   <div class="overlay-message" *ngIf="accessGranted && !accessDenied">
     <div class="overlay-message-background"></div>
     <div class="overlay-message-popup">
-      <img src="/assets/img/undraw_door.svg" class="message-logo" alt="Welcome">
+      <img src="./assets/img/undraw_door.svg" class="message-logo" alt="Welcome">
       <p class="message-text-success">{{ 'AM.success-message' | translate }}</p>
     </div>
   </div>
@@ -22,12 +42,9 @@
   <div class="overlay-message" *ngIf="!accessGranted && accessDenied">
     <div class="overlay-message-background"></div>
     <div class="overlay-message-popup">
-      <img src="/assets/img/undraw_access_denied.svg" class="message-logo" alt="Access denied">
+      <img src="./assets/img/undraw_access_denied.svg" class="message-logo" alt="Access denied">
       <p class="message-text-error">{{ 'AM.error-message' | translate }}</p>
     </div>
   </div>
 
 </div>
-
-
-

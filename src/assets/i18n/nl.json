@@ -2,16 +2,92 @@
 	"AM": {
 		"disconnected": "Disconnected! klik om te verversen",
 		"error-message": "Geen toegang!",
-		"scan_code": "Scan de Qr met de ProofMe App.",
+		"error_no_data": "Error. Geen opgevraagde data.",
+		"no_requested_data": "Selecteer alstublieft de data die u wilt opvragen in de config.",
+		"scan_code": "Scan de QR-Code met de",
+		"scan_code2": "ProofMe App.",
 		"success-message": "Welkom!"
+	},
+	"ATTRIBUTES": {
+		"CUSTOM": {
+			"airticket": "Airline ticket",
+			"festicket": "Festival ticket",
+			"socticket": "Soccer ticket"
+		},
+		"EMAIL": {
+			"email": "E-Mail"
+		},
+		"HEALTH": {
+			"vpasscormodern": "VPASS Corona Modern",
+			"vpasscorpfizer": "VPASS Corona Pfizer",
+			"vtestcoranti": "VTEST Corona Antigeen",
+			"vtestcorlamp": "VTEST Corona Lamp",
+			"vtestcorpcr": "VTEST Corona PCR"
+		},
+		"PHONE": {
+			"phone": "Telefoonnummer"
+		}
+	},
+	"CNF": {
+		"MENU": {
+			"ADMINS": "Beheerders",
+			"AM": "Toegang",
+			"LOGS": "Logboek",
+			"SETTINGS": "Instellingen"
+		},
+		"add": "Toevoegen",
+		"add_admin1": "Scan de QR-Code met nieuwe beheerder's",
+		"add_admin2": "Proofme.ID app om een nieuwe beheerder te worden",
+		"add_whitelist": "Gebruiker toevoegen",
+		"admin-recovered": "Uw admin rechten zijn opnieuw gelinkt",
+		"admins": "Dit zijn de Beheerders.",
+		"allow_demo": "Demo attributen toestaan?",
+		"allowed": "Toegestaan",
+		"already_exists": "Deze link bestaat al.",
+		"cancel": "Annuleren",
+		"confirm": "Bevestigen",
+		"continue": "Doorgaan",
+		"create": "Creëer",
+		"delete": "Verwijderen",
+		"disabled": "Uitgeschakeld",
+		"email_whitelist_1": "Vul de E-Mail in die u wilt toevoegen.",
+		"email_whitelist_2": "Zoals het volgende: \"someone@gmail.com\"",
+		"enabled": "Ingeschakeld",
+		"language": "Taal:",
+		"linked_credential": "Gelinkte gegeven",
+		"logout": "Uitloggen",
+		"logs_message": "Log bericht",
+		"logs_time": "Tijd",
+		"logs_type": "Type",
+		"logs_welcome_1": "Welkom in het logboek.",
+		"logs_welcome_2": "Hier kunt u zien wie wat doet in de applicatie.",
+		"no_log_found_1": "Er is geen log gevonden op deze datum.",
+		"no_log_found_2": "Probeer alstublieft een andere datum.",
+		"not_allowed": "Niet toegestaan",
+		"offer_recovery": "Het lijkt erop dat het e-mailadres van deze beheerder is gekoppeld aan een andere kluis",
+		"offer_recovery2": "Wilt u dit e-mailadres aan deze kluis koppelen?",
+		"phone_whitelist_1": "Vul het telefoonnummer in dat u toe wilt voegen",
+		"phone_whitelist_2": "Zoals het volgende: \"+31612345678\"",
+		"recover": "Herstel",
+		"remove": "Verwijderen",
+		"scan_code": "Scan de QR-Code met de ProofMe App om",
+		"scan_code2": "te bewijzen dat u een Administrator bent.",
+		"scan_recover": "Om uw admin rechten terug te krijgen.",
+		"settings": "Dit zijn de algemene instellingen.",
+		"warn": "",
+		"welcome_message1": "Welkom in het configuratiescherm.",
+		"welcome_message2": "Hier kunt u het logboek bekijken en de beheerders, het toegangsbeheer en algemene instellingen bewerken.",
+		"which_credentials": "Welke gegevens wilt u toestaan?",
+		"whitelist": "Whitelist",
+		"type": "{type, select, warn{WAARSCHUWING} info{INFO} other{ANDER}}",
+		"message": "{type, select, 1{Gebruiker {user} heeft geen toegang gekregen vanwege invalide gegevens.} 2{Gebruiker {user} heeft ingelogd in de configuratie.} 3{Gebruiker {user} is aangeboden om zijn of haar admin gegevens te herstellen.} 4{Gebruiker {user} heeft zijn of haar admin gegevens hersteld.} 5{Gebruiker {user} heeft geen toegang gekregen tot de configuratie.} 6{Gebruiker {user} heeft toegang gekregen met een ingeschakelde whitelist. } 7{Gebruiker {user} heeft geen toegang gekregen met een ingeschakelde whitelist. } other{Error. Related to {user}}}"
 	},
 	"INSTRUCTION_OVERLAY": {
 		"message": "Volg de instructies in de app"
 	},
 	"PAGES": {
-		"BACK_TO_HOME": "Terug",
 		"CONFIG": {
-			"TITLE": "Config"
+			"TITLE": "Configuratiescherm"
 		},
 		"GO_TO_AM": "Toegangscontrole",
 		"GO_TO_CONFIG": "Instellingen",

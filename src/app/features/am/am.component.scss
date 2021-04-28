@@ -30,6 +30,17 @@
     align-items: center;
   }
 
+  .no-data {
+    text-align: center;
+  } 
+
+  .no-data a {
+    &:hover { 
+      background: darken(#28a745, 10%);
+      color: white !important;
+    }
+  }
+
   .message-logo {
     width: 230px;
     height: 200px;
@@ -48,4 +59,23 @@
     color: var(--danger)
   }
 
+  .top-right-config-link {
+    position: absolute;
+    right: 0;
+    left: auto;
+    top: 0;
+    bottom: auto;
+    opacity: 0.3;
+    color: lightblue;
+    background-color: #000;
+  }
+
+  fa-icon {
+    color: #aaaaaa
+  }
+
+  .qr-code-text {
+    padding-top: 0px;
+    margin-bottom: 0 !important;
+  }
 }

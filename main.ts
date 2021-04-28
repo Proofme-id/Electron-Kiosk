@@ -245,3 +245,11 @@ ipcMain.on('hasKey', (event, key) => {
     event.returnValue = false;
   }
 });
+
+ipcMain.on('deleteKey', (event, key) => {
+  try {
+    event.returnValue = store.delete(key)
+  } catch (e) {
+    event.returnValue = false;
+  }
+})

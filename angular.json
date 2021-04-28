@@ -20,7 +20,8 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "./node_modules/ngx-ui-switch/ui-switch.component.css"
             ],
             "scripts": [],
             "customWebpackConfig": {
@@ -110,7 +111,9 @@
             "karmaConfig": "src/karma.conf.js",
             "scripts": [],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/ngx-bootstrap/datepicker/bs-datepicker.css"
             ],
             "assets": [
               "src/assets"

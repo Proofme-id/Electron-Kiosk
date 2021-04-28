@@ -1,12 +1,12 @@
 import { Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
-import { Router } from "@angular/router";
-import { IValidCredential, ProofmeUtilsProvider, WebRtcProvider } from "@proofmeid/webrtc-web/proofmeid-webrtc-web";
+import { IRequestedCredentials, IRequestedCredentialsCheckResult, IValidatedCredentials, ProofmeUtilsProvider, WebRtcProvider } from "@proofmeid/webrtc-web";
 import * as QRCode from 'qrcode';
 import { filter, skip, takeUntil } from "rxjs/operators";
-import { IAttributeRequest } from "../../interfaces/attributeRequest.interface";
 import { RelayProvider } from "../../providers/relay-provider.service";
 import { BaseComponent } from "../../shared/components";
 import { AppStateFacade } from "../../state/app/app.facade";
+import { StorageProvider } from '../../providers/storage-provider.service'
+const log = window['require']('electron-log') 
 
 @Component({
   selector: 'app-am',
@@ -14,42 +14,39 @@ import { AppStateFacade } from "../../state/app/app.facade";
   styleUrls: ['./am.component.scss']
 })
 export class AmComponent extends BaseComponent implements OnInit {
-
+  validCredentialObj: IValidatedCredentials | IRequestedCredentialsCheckResult = null;
+  requestedData: IRequestedCredentials = this.requestData();
   @ViewChild("qrCodeCanvas")
   qrCodeCanvas: ElementRef;
-
-  requestedData: IAttributeRequest = {
-    by: "Kiosk",
-    description: "Access controle",
-    credentials: [{
-      key: "PHONE_NUMBER",
-      required: true,
-      expectedValue: null,
-      provider: ['PHONE_NUMBER'],
-    }],
-    minimumRequired: []
-  };
-
   signalingUrl = "wss://auth.proofme.id"
   web3Url = "https://api.didux.network/";
-  validCredentialObj: IValidCredential = null;
-  trustedAuthorities = ['0xa6De718CF5031363B40d2756f496E47abBab1515'] // ProofME production environment
+  trustedAuthorities = [] 
   websocketDisconnected = false;
   accessGranted = false;
   accessDenied = false;
+  whitelist = this.StorageProvider.getKey("whitelistedUsers")
 
   constructor(
-    private router: Router,
     private relayProvider: RelayProvider,
     private webRtcProvider: WebRtcProvider,
     private appStateFacade: AppStateFacade,
+    private StorageProvider: StorageProvider,
     private ngZone: NgZone,
     private proofmeUtilsProvider: ProofmeUtilsProvider
   ) {
     super();
   }
 
+  storeRightTrustedAuthorities(): void {
+    if (this.StorageProvider.hasKey('allowDemo')) {
+      this.trustedAuthorities = ['0xa6De718CF5031363B40d2756f496E47abBab1515', '0x708686336db6A465C1161FD716a1d7dc507d1d17']
+    }
+    else if (!this.StorageProvider.hasKey('allowDemo')) {
+      this.trustedAuthorities = ['0xa6De718CF5031363B40d2756f496E47abBab1515']
+    }
+  }
   ngOnInit(): void {
+    this.storeRightTrustedAuthorities()
     this.setupWebRtc();
   }
 
@@ -112,7 +109,7 @@ export class AmComponent extends BaseComponent implements OnInit {
           await this.validateIdentifyData(data);
         } else {
           console.log("No credentials provided. Probably clicked cancel on the mobile app");
-          if(!this.accessGranted && !this.accessDenied) {
+          if (!this.accessGranted && !this.accessDenied) {
             setTimeout(() => {
               this.refreshWebsocketDisconnect()
             }, 1000);
@@ -122,7 +119,7 @@ export class AmComponent extends BaseComponent implements OnInit {
       if (data.action === "disconnect") {
         this.appStateFacade.setShowExternalInstruction(false);
         this.websocketDisconnected = true;
-        if(!this.accessGranted && !this.accessDenied) {
+        if (!this.accessGranted && !this.accessDenied) {
           setTimeout(() => {
             this.refreshWebsocketDisconnect()
           }, 1000);
@@ -131,35 +128,173 @@ export class AmComponent extends BaseComponent implements OnInit {
     });
   }
 
-  async validateIdentifyData(data): Promise<void> {
-    const identifyByCredentials = []
-    for (const credential of this.requestedData.credentials) {
-      identifyByCredentials.push({
-        key: credential.key,
-        provider: credential.provider
-      })
+
+  requestData(): IRequestedCredentials {
+    let request: IRequestedCredentials;
+    let customAndHealth: boolean[] = [].concat(this.StorageProvider.getKey("Custom"), this.StorageProvider.getKey("Health"))
+
+    if (customAndHealth && !this.StorageProvider.hasKey("WhitelistEnabled")) {
+      const allCredentials = [
+        {
+          key: "AIR_TICKET",
+          required: true,
+          expectedValue: null,
+          provider: 'CUSTOM',
+        },
+        {
+          key: "SOC_TICKET",
+          required: true,
+          expectedValue: null,
+          provider: 'CUSTOM',
+        },
+        {
+          key: "FES_TICKET",
+          required: true,
+          expectedValue: null,
+          provider: 'CUSTOM',
+        },
+        {
+          key: "VTEST_COR_PCR",
+          required: false,
+          expectedValue: 'false',
+          provider: 'HEALTH'
+        }, {
+          key: "VTEST_COR_ANTIGEEN",
+          required: false,
+          expectedValue: 'false',
+          provider: 'HEALTH',
+        }, {
+          key: "VTEST_COR_LAMP",
+          required: false,
+          expectedValue: 'false',
+          provider: 'HEALTH',
+        }, {
+          key: "VPASS_COR_MODERNA",
+          required: false,
+          expectedValue: 'true',
+          provider: 'HEALTH',
+        }, {
+          key: "VPASS_COR_PFIZER",
+          required: false,
+          expectedValue: 'true',
+          provider: 'HEALTH',
+        }
+      ]
+      const healthMinRequired = [
+        "VTEST_COR_PCR",
+        "VTEST_COR_ANTIGEEN",
+        "VTEST_COR_LAMP",
+        "VPASS_COR_MODERNA",
+        "VPASS_COR_PFIZER"
+      ]
+      const allFiltered = [].concat(allCredentials.filter(x => customAndHealth[0][x.key] === true), allCredentials.filter(x => customAndHealth[1][x.key] === true))
+      const filteredMinRequired = healthMinRequired.filter(x => customAndHealth[1][x] === true)
+
+      request = {
+        by: "Kiosk",
+        description: "Access controle",
+        credentials: allFiltered,
+        minimumRequired: {
+          amount: 1,
+          data: filteredMinRequired
+        }
+      };
+    } else if (this.StorageProvider.hasKey("WhitelistEnabled")) {
+      console.log("whitelist enabled")
+      request = {
+        by: "Kiosk",
+        description: "Access controle",
+        credentials: []
+      };
+      if (this.StorageProvider.getKey("selectedWhitelist") === "phone") {
+        request.credentials.push({
+          key: "PHONE_NUMBER",
+          required: true,
+          expectedValue: 'true',
+          provider: 'PHONE_NUMBER',
+        })
+      }
+      else if (this.StorageProvider.getKey("selectedWhitelist") === "email") {
+        request.credentials.push({
+          key: "EMAIL",
+          required: true,
+          expectedValue: 'true',
+          provider: 'EMAIL',
+        })
+      }
+
     }
+    return request;
+  }
 
-    this.validCredentialObj = await this.proofmeUtilsProvider.validCredentialsTrustedParties(data.credentialObject, this.web3Url, identifyByCredentials,this.trustedAuthorities);
+  existsData(key: string): boolean {
+    return this.StorageProvider.hasKey(key);
+  }
 
+  async validateIdentifyData(data): Promise<void> {
+    this.validCredentialObj = await this.proofmeUtilsProvider.validCredentialsTrustedParties(data.credentialObject, this.web3Url, this.requestedData, this.trustedAuthorities, true);
     console.log("validCredentials result:", this.validCredentialObj);
     this.appStateFacade.setShowExternalInstruction(false);
-    if (!this.validCredentialObj.valid) {
+    if (!(this.validCredentialObj as IValidatedCredentials).valid) {
+      if (data.credentialObject.credentials.EMAIL != undefined) { 
+        log.warn('1 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
+      } else if (data.credentialObject.credentials.PHONE_NUMBER != undefined) {
+        log.warn('1 ' + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
+      }
       this.ngZone.run(() => {
         this.accessDenied = true;
         this.accessGranted = false;
       });
       setTimeout(() => {
         this.refreshWebsocketDisconnect()
-      }, 5000);
+      }, 2500);
       console.error(this.validCredentialObj);
     } else {
-      console.log("Success!!!")
-      this.openDoor(1);
-      this.ngZone.run(() => {
-        this.accessDenied = false;
-        this.accessGranted = true;
-      });
+      if (this.StorageProvider.hasKey("WhitelistEnabled")) {
+        if (data.credentialObject.credentials.EMAIL != undefined) {
+          if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 1) === 1) {
+            console.log("Success!!!")
+            log.info('6 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
+            this.openDoor(1)
+            this.ngZone.run(() => {
+              this.accessDenied = false;
+              this.accessGranted = true;
+            });
+          }
+          else {
+            log.warn('7 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
+            this.ngZone.run(() => {
+              this.accessDenied = true;
+              this.accessGranted = false;
+            });
+          }
+        }
+        else if (data.credentialObject.credentials.PHONE_NUMBER != undefined) {
+          if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 0) === 1) {
+            console.log("Success!!!")
+            log.info('6 ' + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
+            this.openDoor(1)
+            this.ngZone.run(() => {
+              this.accessDenied = false;
+              this.accessGranted = true;
+            });
+          }
+          else {
+            log.warn('7 ' + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
+            this.ngZone.run(() => {
+              this.accessDenied = true;
+              this.accessGranted = false;
+            });
+          }
+        }
+      }
+      else if (!this.StorageProvider.hasKey("WhitelistEnabled")) {
+        console.log("Success!!!")
+        this.ngZone.run(() => {
+          this.accessDenied = false;
+          this.accessGranted = true;
+        });
+      }
       setTimeout(() => {
         this.refreshWebsocketDisconnect()
       }, 5000);
@@ -172,6 +307,22 @@ export class AmComponent extends BaseComponent implements OnInit {
       this.accessGranted = false;
     });
     this.setupWebRtc();
+  }
+
+  whitelistedExistsAndIsCorrect(whitelist: any, data: any, type: number): number {
+    for (let whitelisted of whitelist) {
+      if (type === 0) {
+        if (whitelisted === data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value) {
+          return 1;
+        }
+      }
+      else if (type === 1) {
+        if (whitelisted === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
+          return 1;
+        }
+      }
+    }
+    return 0;
   }
 
 }
