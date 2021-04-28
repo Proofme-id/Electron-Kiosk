@@ -1,5 +1,5 @@
 {
-  "productName": "angular-electron",
+  "productName": "ProofMe.id-kiosk",
   "directories": {
     "output": "release/"
   },
@@ -34,7 +34,7 @@
   "linux": {
     "icon": "dist/assets/icons",
     "target": [
-      "AppImage"
+      "AppImage", "deb"
     ]
   }
 }
