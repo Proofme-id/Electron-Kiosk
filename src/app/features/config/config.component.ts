@@ -21,11 +21,12 @@ var logLines: logInfo[] = [];
 export class ConfigComponent extends BaseComponent implements OnInit {
   log = window['require']('electron-log')
   fs = window['require']('fs');
+  path = window['require']('path')
   readline = window['require']('readline');
-  date = new Date().toISOString()
   logInput: string = "";
   lines = [];
-  logsPath = process.env.APPDATA + "/proofmeid-kiosk/logs/";
+  date = new Date().toISOString()
+  logsPath: string = process.env.APPDATA + '/proofmeid-kiosk/logs/' || (process.platform == 'darwin' ? process.env.HOME + '/Library/Logs/proofmeid-kiosk/' : process.env.HOME + "/.config/proofmeid-kiosk/logs/")
   readInterface;
   availableLogs: string[] = [];
   @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -153,6 +154,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.getCorrectValues();
     this.setupWebRtc("regular");
     if (!this.existsData('firstStartupCompleted')) {

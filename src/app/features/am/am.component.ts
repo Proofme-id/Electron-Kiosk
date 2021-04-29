@@ -19,6 +19,8 @@ export class AmComponent extends BaseComponent implements OnInit {
   requestedData: IRequestedCredentials = this.requestData();
   @ViewChild("qrCodeCanvas")
   qrCodeCanvas: ElementRef;
+  date = new Date().toISOString()
+  logsPath: string = process.env.APPDATA + '/proofmeid-kiosk/logs/' || (process.platform == 'darwin' ? process.env.HOME + '/Library/Logs/proofmeid-kiosk/' : process.env.HOME + "/.config/proofmeid-kiosk/logs/")
   signalingUrl = "wss://auth.proofme.id"
   web3Url = "https://api.didux.network/";
   trustedAuthorities = [] 
@@ -48,6 +50,7 @@ export class AmComponent extends BaseComponent implements OnInit {
     }
   }
   ngOnInit(): void {
+    log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.storeRightTrustedAuthorities()
     this.setupWebRtc();
     if (!this.existsData('firstStartupCompleted')) {
