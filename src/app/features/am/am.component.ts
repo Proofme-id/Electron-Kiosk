@@ -50,6 +50,7 @@ export class AmComponent extends BaseComponent implements OnInit {
       this.trustedAuthorities = ['0xa6De718CF5031363B40d2756f496E47abBab1515']
     }
   }
+
   ngOnInit(): void {
     log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.storeRightTrustedAuthorities()
@@ -61,7 +62,7 @@ export class AmComponent extends BaseComponent implements OnInit {
     this.relayProvider.switchSlot(slot, timeout);
     this.accessGranted = true;
     setTimeout(() => {
-      this.accessGranted = false;
+      this.refreshWebsocketDisconnect();
     }, timeout);
   }
 

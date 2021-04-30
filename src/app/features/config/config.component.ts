@@ -30,7 +30,6 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   readInterface;
   availableLogs: string[] = [];
   @ViewChild(MatPaginator) paginator: MatPaginator;
-
   displayedColumns: string[] = ['type', 'time', 'message'];
   @ViewChild("qrCodeCanvas")
   qrCodeCanvas: ElementRef;
