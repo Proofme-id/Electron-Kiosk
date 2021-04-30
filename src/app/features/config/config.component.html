@@ -147,7 +147,7 @@
         {{ 'CNF.logout' | translate }}
     </a>
 
-    <a routerLink="/am" class="logout-small">
+    <a routerLink="/am" class="logout-small" *ngIf="existsData('firstStartupCompleted')">
         <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
     </a>
 </nav>
