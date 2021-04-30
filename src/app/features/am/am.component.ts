@@ -7,7 +7,7 @@ import { BaseComponent } from "../../shared/components";
 import { AppStateFacade } from "../../state/app/app.facade";
 import { StorageProvider } from '../../providers/storage-provider.service'
 import { Router } from '@angular/router';
-const log = window['require']('electron-log') 
+const log = window['require']('electron-log')
 
 @Component({
   selector: 'app-am',
@@ -23,7 +23,7 @@ export class AmComponent extends BaseComponent implements OnInit {
   logsPath: string = process.env.APPDATA + '/proofmeid-kiosk/logs/' || (process.platform == 'darwin' ? process.env.HOME + '/Library/Logs/proofmeid-kiosk/' : process.env.HOME + "/.config/proofmeid-kiosk/logs/")
   signalingUrl = "wss://auth.proofme.id"
   web3Url = "https://api.didux.network/";
-  trustedAuthorities = [] 
+  trustedAuthorities = []
   websocketDisconnected = false;
   accessGranted = false;
   accessDenied = false;
@@ -142,7 +142,7 @@ export class AmComponent extends BaseComponent implements OnInit {
     if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true)) {
       this.showQR = true;
       credentials = this.StorageProvider.getKey("Credentials")
-    } else { 
+    } else {
       return request;
     }
 
@@ -249,7 +249,7 @@ export class AmComponent extends BaseComponent implements OnInit {
     console.log("validCredentials result:", this.validCredentialObj);
     this.appStateFacade.setShowExternalInstruction(false);
     if (!(this.validCredentialObj as IValidatedCredentials).valid) {
-      if (data.credentialObject.credentials.EMAIL != undefined) { 
+      if (data.credentialObject.credentials.EMAIL != undefined) {
         log.warn('1 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
       } else if (data.credentialObject.credentials.PHONE_NUMBER != undefined) {
         log.warn('1 ' + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
