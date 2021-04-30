@@ -180,7 +180,15 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       VPASS_COR_MODERNA: this.modernChecked,
       VPASS_COR_PFIZER: this.pfizerChecked
     })
-    if (!this.StorageProvider.hasKey('firstStartupCompleted')) this.StorageProvider.setKey('firstStartupCompleted', 'First time initialization Completed: ' + Date.now());
+    if (!this.StorageProvider.hasKey('firstStartupCompleted')) {
+      this.StorageProvider.setKey('firstStartupCompleted', 'First time initialization Completed: ' + Date.now());
+      this.StorageProvider.setKey('ShowFSCompletedMessage', true)
+      setTimeout(() => {
+        this.ngZone.run(() => {
+          this.StorageProvider.deleteKey('ShowFSCompletedMessage')
+        });
+      }, 2500);
+    }
   }
 
   ngOnInit(): void {

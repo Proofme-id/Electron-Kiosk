@@ -116,6 +116,14 @@
             <p class="message-text-success" *ngIf="adminRecovered">{{ 'CNF.admin-recovered' | translate }}</p>
         </div>
     </div>
+
+    <div class="overlay-message" *ngIf="existsData('ShowFSCompletedMessage')">
+        <div class="overlay-message-background"></div>
+        <div class="overlay-message-popup">
+            <img src="./assets/img/undraw_door.svg" class="message-logo" alt="Startup completed">
+            <p class="message-text-success">{{ 'CNF.completed_startup' | translate }}</p>
+        </div>
+    </div>
     
     <div class="overlay-message" *ngIf="!accessGranted && accessDenied && !overlayClosed">
         <div class="overlay-message-background"></div>
