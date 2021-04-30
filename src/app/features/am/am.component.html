@@ -1,6 +1,6 @@
 <div class="main-container">
   <div class="main-view-div" [hidden]="accessGranted || accessDenied"
-    [hidden]="!existsData('askHealth')  && !existsData('askCustom')">
+    [hidden]="!showQR">
     <div class="qr-code fixed-width">
       <div>
         <div *ngIf="websocketDisconnected" class="disconnect-overlay" (click)="refreshWebsocketDisconnect()">
@@ -13,7 +13,7 @@
     </div>
   </div>
 
-  <div *ngIf="!existsData('askHealth')  && !existsData('askCustom')">
+  <div *ngIf="!showQR">
     <div class="card shadow mb-4">
       <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
         <h6 class="m-0 font-weight-bold text-primary">{{ 'AM.error_no_data' | translate }}</h6>

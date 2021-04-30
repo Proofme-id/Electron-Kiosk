@@ -33,7 +33,8 @@
 			"ADMINS": "Beheerders",
 			"AM": "Toegang",
 			"LOGS": "Logboek",
-			"SETTINGS": "Instellingen"
+			"SETTINGS": "Instellingen",
+			"WHITELIST": "Whitelist"
 		},
 		"add": "Toevoegen",
 		"add_admin1": "Scan de QR-Code met nieuwe beheerder's",

@@ -33,7 +33,8 @@
 			"ADMINS": "Admins",
 			"AM": "Access",
 			"LOGS": "Logs",
-			"SETTINGS": "Settings"
+			"SETTINGS": "Settings",
+			"WHITELIST": "Whitelist"
 		},
 		"add": "Add",
 		"add_admin1": "Let the new Admin scan this QR-Code with",

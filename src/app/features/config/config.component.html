@@ -1,79 +1,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css"
     integrity="sha512-Cv93isQdFwaKBV+Z4X8kaVBYWHST58Xb/jVOcV9aRsGSArZsgAnFIhMpDoMDcFNoUtday1hdjn0nGp3+KZyyFw=="
     crossorigin="anonymous" />
-<div class="menu" *ngIf="accessGranted">
-    <div class="sidebar-inner-div">
 
-        <div class="logo">
-            <img src="./assets/img/logo.png">
-        </div>
 
-        <div class="logo-small">
-            <img src="./assets/img/logo-small.png">
-        </div>
-
-        <div class="sidebar-items">
-
-            <div class="sidebar-item" (click)="resetShow(); showAdmins = true;">
-                <div class="sidebar-icon-container">
-                    <fa-icon [icon]="['fas', 'users']"></fa-icon>
-                </div>
-                <span>
-                    {{ 'CNF.MENU.ADMINS' | translate }}
-                </span>
-            </div>
-
-            <div class="sidebar-item" (click)="resetShow(); showAm = true;">
-                <div class="sidebar-icon-container">
-                    <fa-icon [icon]="['fas', 'user-lock']"></fa-icon>
-                </div>
-                <span>
-                    {{ 'CNF.MENU.AM' | translate }}
-                </span>
-            </div>
-
-            <div class="sidebar-item" (click)="resetShow(); showSettings = true; ">
-                <div class="sidebar-icon-container">
-                    <fa-icon [icon]="['fas', 'cog']"></fa-icon>
-                </div>
-                <span>
-                    {{ 'CNF.MENU.SETTINGS' | translate }}
-                </span>
-            </div>
-
-            <div class="sidebar-item" (click)="resetShow(); showLogs = true; showLogsWelcome = true; fillAvailableLogs(); foundLog = false;">
-                <div class="sidebar-icon-container">
-                    <fa-icon [icon]="['fas', 'envelope']"></fa-icon>
-                </div>
-                <span>
-                    {{ 'CNF.MENU.LOGS' | translate }}
-                </span>
-            </div>
-
-        </div>
-    </div>
-
-</div>
-
-<nav class="header-main-div navbar navbar-light" *ngIf="accessGranted">
-    <div class="header-main-title">
-        <h2> {{ 'PAGES.CONFIG.TITLE' | translate }} </h2>
-    </div>
-
-    <a routerLink="/am" class="logout">
-        {{ 'CNF.logout' | translate }}
-    </a>
-
-    <a routerLink="/am" class="logout-small">
-        <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
-    </a>
-</nav>
-
-<div class="main-container">
-    <a class="top-right-am-link" routerLink="/am" *ngIf="!accessGranted">
-        <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
-    </a>
-    
     <div class="overlay-message" [hidden]="!offerAdminRecovery && !overlayClosed || accessGranted || accessDenied">
         <div class="overlay-message-background" *ngIf="offerAdminRecovery || adminRecovery"></div>
         <div class="overlay-message-popup-recovery" *ngIf="offerAdminRecovery && !adminRecovery && !overlayClosed">
@@ -82,11 +11,14 @@
             <p class="message-text-error pt-0">{{ 'CNF.offer_recovery2' | translate }}</p>
             <button class="btn btn-success w-50" (click)="setupWebRtc('recovery')">{{ 'CNF.recover' | translate
                 }}</button>
-            <button class="btn btn-danger w-50 cancelButton" (click)="offerAdminRecovery = false;">{{ 'CNF.cancel' | translate
+            <button class="btn btn-danger w-50 cancelButton"
+                (click)="offerAdminRecovery = false; refreshWebsocketDisconnect('regular') ">{{ 'CNF.cancel' |
+                translate
                 }}</button>
         </div>
-
-        <div class="overlay-message-popup set-height-recoveryqr" [hidden]="!showRecoveryQR && !adminRecovery || adminRecoveryCompleted">
+    
+        <div class="overlay-message-popup set-height-recoveryqr"
+            [hidden]="!showRecoveryQR && !adminRecovery || adminRecoveryCompleted">
             <div class="qr-code fixed-width">
                 <div>
                     <div *ngIf="websocketDisconnected" class="disconnect-overlay"
@@ -99,11 +31,13 @@
                 <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'CNF.scan_code' | translate }}</p>
                 <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'CNF.scan_recover' | translate }}</p>
             </div>
-            <button class="btn btn-danger w-50 cancelButton" (click)="!showRecoveryQR = false; adminRecovery = false; adminRecoveryCompleted = false;">{{ 'CNF.cancel' | translate
-            }}</button>
+            <button class="btn btn-danger w-50 cancelButton"
+                (click)="!showRecoveryQR = false; adminRecovery = false; adminRecoveryCompleted = false;">{{
+                'CNF.cancel' | translate
+                }}</button>
         </div>
     </div>
-
+    
     <div class="overlay-message" [hidden]="!addAdmin">
         <div class="overlay-message-background" [hidden]="!addAdmin"></div>
         <div class="overlay-message-popup-add" [hidden]="!addAdmin">
@@ -115,12 +49,13 @@
                 <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #qrCodeCanvasAddAdmin></canvas>
                 <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'CNF.add_admin1' | translate }}</p>
                 <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'CNF.add_admin2' | translate }}</p>
-                <button class="btn btn-danger w-50 cancelButton" (click)="addAdmin = false;">{{ 'CNF.cancel' | translate
+                <button class="btn btn-danger w-50 cancelButton" (click)="addAdmin = false;">{{ 'CNF.cancel' |
+                    translate
                     }}</button>
             </div>
         </div>
     </div>
-
+    
     <div class="overlay-message" *ngIf="addToWhitelist">
         <div class="overlay-message-background" *ngIf="addToWhitelist"></div>
         <div class="overlay-message-popup-add" *ngIf="addToWhitelist">
@@ -138,14 +73,15 @@
                     <button class="btn btn-success w-50 cancelButton" *ngIf="input"
                         (click)="addToWhitelist = false; selectedCredential = false; addUserToWhitelist(); resetInput();">{{
                         'CNF.continue' | translate }}</button>
-                    <button class="btn btn-danger w-50 cancelButton" (click)="addToWhitelist = false; resetInput();">{{
+                    <button class="btn btn-danger w-50 cancelButton"
+                        (click)="addToWhitelist = false; resetInput();">{{
                         'CNF.cancel' |
                         translate }}</button>
                 </div>
             </div>
         </div>
     </div>
-
+    
     <div class="overlay-message" *ngIf="confirmDelete">
         <div class="overlay-message-background" *ngIf="confirmDelete"></div>
         <div class="overlay-message-popup-add" *ngIf="confirmDelete">
@@ -155,28 +91,15 @@
                     <button class="btn btn-success w-50 cancelButton"
                         (click)="deleteWhitelist(); confirmDelete = false;">{{
                         'CNF.confirm' | translate }}</button>
-                    <button class="btn btn-danger w-50 cancelButton" (click)="confirmDelete = false;">{{ 'CNF.cancel' |
+                    <button class="btn btn-danger w-50 cancelButton" (click)="confirmDelete = false;">{{
+                        'CNF.cancel' |
                         translate }}</button>
-                        
+    
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="main-view-div" [hidden]="accessGranted || accessDenied || adminRecovery || offerAdminRecovery">
-        <div class="qr-code fixed-width">
-            <div>
-                <div *ngIf="websocketDisconnected" class="disconnect-overlay"
-                    (click)="refreshWebsocketDisconnect('regular')">
-                    <p>{{ 'AM.disconnected' | translate }}</p>
-                </div>
-                <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #qrCodeCanvas></canvas>
-            </div>
-            <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'CNF.scan_code' | translate }}</p>
-            <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'CNF.scan_code2' | translate }}</p>
-        </div>
-    </div>
-
+    
     <div class="overlay-message" *ngIf="alreadyExists">
         <div class="overlay-message-background" *ngIf="alreadyExists"></div>
         <div class="overlay-message-popup" *ngIf="alreadyExists">
@@ -184,7 +107,7 @@
             <p class="message-text-success">{{ 'CNF.already_exists' | translate }}</p>
         </div>
     </div>
-
+    
     <div class="overlay-message" *ngIf="accessGranted && !accessDenied && !overlayClosed">
         <div class="overlay-message-background"></div>
         <div class="overlay-message-popup">
@@ -193,7 +116,7 @@
             <p class="message-text-success" *ngIf="adminRecovered">{{ 'CNF.admin-recovered' | translate }}</p>
         </div>
     </div>
-
+    
     <div class="overlay-message" *ngIf="!accessGranted && accessDenied && !overlayClosed">
         <div class="overlay-message-background"></div>
         <div class="overlay-message-popup">
@@ -201,275 +124,409 @@
             <p class="message-text-error">{{ 'AM.error-message' | translate }}</p>
         </div>
     </div>
-
-    <div class="container" *ngIf="accessGranted && !accessDenied && overlayClosed && showSettings">
-        <div class="content">
-            <div class="content-div row  justify-content-center">
-                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-8 content-div">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
-                            <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.settings' | translate }}</h6>
-                        </div>
-                        <div class="card-body d-flex flex-row flex-sm-row flex-md-row flex-lg-row settings">
-                            <span class="language"> {{ 'CNF.language' | translate }} </span>
-                            <ngx-flag-picker [customLabels]="customLabels" [selectedCountryCode]="selectedCountryCode"
-                                [countryCodes]="countryCodes" (changedCountryCode)="changeSelectedCountryCode($event)">
-                            </ngx-flag-picker>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container"
-        *ngIf="accessGranted && !accessDenied && overlayClosed && !showAm && !showAdmins && !showSettings && !showLogs">
-        <div class="content">
-            <div class="content-div row  justify-content-center">
-                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-10 col-8 content-div">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
-                            <h6 class="m-0 font-weight-bold text-primary">{{ 'PAGES.CONFIG.TITLE' | translate }}</h6>
-                        </div>
-                        <div
-                            class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-row justify-content-center text-center">
-                            <p>{{ 'CNF.welcome_message1' | translate }} <br />
-                                {{ 'CNF.welcome_message2' | translate }}</p> 
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container"
-        *ngIf="accessGranted && !accessDenied && showLogs">
-        <div class="content">
-            <div class="content-div row  justify-content-center">
-                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-10 col-8 content-div">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
-                            <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.MENU.LOGS' | translate }} </h6>
-                            <mat-form-field appearance="fill" class="right">
-                                <mat-label >Pick a date</mat-label>
-                                <input #dateInput matInput [matDatepicker]="dp1" (dateChange)="getRightDateAndLogs($event)" disabled>
-                                <mat-datepicker-toggle matSuffix [for]="dp1"></mat-datepicker-toggle>
-                                <mat-datepicker #dp1 disabled="false"></mat-datepicker>
-                              </mat-form-field>
-                        </div>
-                        <div
-                            class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center text-center">
-                            <p *ngIf="showLogsWelcome"> 
-                                {{ 'CNF.logs_welcome_1' | translate }} <br />
-                                {{ 'CNF.logs_welcome_2' | translate }}
-                            </p>
-                            <p *ngIf="!foundLog && !showLogsWelcome">
-                                {{ 'CNF.no_log_found_1' | translate }} <br />
-                                {{ 'CNF.no_log_found_2' | translate }}
-                            </p>
-                             <table mat-table [dataSource]="dataSource" *ngIf="foundLog">
-
-                                <ng-container matColumnDef="type">
-                                  <th mat-header-cell *matHeaderCellDef class="set-width"> {{ 'CNF.logs_type' | translate }} </th>
-                                  <td mat-cell *matCellDef="let line" class="text-left"> {{'CNF.type' | translate:{ type: line.type } }}</td>
-                                </ng-container>
-                            
-                                <ng-container matColumnDef="time">
-                                  <th mat-header-cell *matHeaderCellDef class="set-width"> {{ 'CNF.logs_time' | translate }} </th>
-                                  <td mat-cell *matCellDef="let line" class="text-left"> {{line.time}} </td>
-                                </ng-container>
-                            
-                                <ng-container matColumnDef="message">
-                                  <th mat-header-cell *matHeaderCellDef> {{ 'CNF.logs_message' | translate }} </th>
-                                  <td mat-cell *matCellDef="let line" class="text-left"> {{'CNF.message' | translate:{ type: line.messageType, user: line.user } }} </td>
-                                </ng-container>
-                            
-                                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-                            </table> 
-                            <mat-paginator [pageSizeOptions]="[5, 10]" [hidden]="!foundLog" showFirstLastButtons></mat-paginator>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     
-    <div class="container" *ngIf="accessGranted && !accessDenied && overlayClosed && showAdmins ">
-        <div class="content">
-            <div
-                class="content-div row d-flex flex-column flex-sm-column flex-md-column flex-lg-row text-center align-items-center">
-                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-8 content-div">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
-                            <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.admins' | translate }}</h6>
-                            <button class="btn btn-success w-10 right"
-                                (click)="addAdmin = true; setupWebRtc('addAdmin'); setRequestedData()">{{ 'CNF.add' |
-                                translate }}</button>
-                        </div>
-                        <div
-                            class="card-body no-padding d-flex flex-column flex-sm-column flex-md-column flex-lg-row justify-content-center">
-                            <table class="table">
-                                <thead>
-                                    <th scope="col">#</th>
-                                    <th scope="col" class="table-credential-title">E-Mail</th>
-                                    <th scope="col" *ngIf="admins.length > 1"> {{ 'CNF.remove' | translate }}</th>
-                                </thead>
-                                <tbody>
-                                    <tr *ngFor="let admin of admins; index as i;">
-                                        <th scope="row">{{ i + 1}}</th>
-                                        <td class="table-credential"> {{ admin.email }} </td>
-                                        <td *ngIf="admins.length > 1">
-                                            <button class="btn btn-danger w-100" (click)="deleteFromList(1, i)">{{
-                                                'CNF.remove' | translate }}</button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+<nav class="header-main-div navbar navbar-light" *ngIf="accessGranted">
+    <div class="header-main-title">
+        <h2> {{ 'PAGES.CONFIG.TITLE' | translate }} </h2>
+    </div>
+
+    <a routerLink="/am" class="logout">
+        {{ 'CNF.logout' | translate }}
+    </a>
+
+    <a routerLink="/am" class="logout-small">
+        <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
+    </a>
+</nav>
+
+<div class="d-flex w-100 h-100">
+    <div class="menu" *ngIf="accessGranted">
+        <div class="sidebar-inner-div">
+
+            <div class="logo">
+                <img src="./assets/img/logo.png">
+            </div>
+
+            <div class="logo-small">
+                <img src="./assets/img/logo-small.png">
+            </div>
+
+            <div class="sidebar-items">
+
+                <div class="sidebar-item" (click)="resetShow(); showAdmins = true; setPaginator('admin');">
+                    <div class="sidebar-icon-container">
+                        <fa-icon [icon]="['fas', 'users']"></fa-icon>
+                    </div>
+                    <span>
+                        {{ 'CNF.MENU.ADMINS' | translate }}
+                    </span>
+                </div>
+
+                <div class="sidebar-item" (click)="resetShow(); showAm = true;">
+                    <div class="sidebar-icon-container">
+                        <fa-icon [icon]="['fas', 'user-lock']"></fa-icon>
+                    </div>
+                    <span>
+                        {{ 'CNF.MENU.AM' | translate }}
+                    </span>
+                </div>
+
+                <div class="sidebar-item" (click)="resetShow(); showWhitelist = true; setPaginator('whitelist')">
+                    <div class="sidebar-icon-container">
+                        <fa-icon [icon]="['fas', 'scroll']"></fa-icon>
+                    </div>
+                    <span>
+                        {{ 'CNF.MENU.WHITELIST' | translate }}
+                    </span>
+                </div>
+                <div class="sidebar-item" (click)="resetShow(); showSettings = true; ">
+                    <div class="sidebar-icon-container">
+                        <fa-icon [icon]="['fas', 'cog']"></fa-icon>
+                    </div>
+                    <span>
+                        {{ 'CNF.MENU.SETTINGS' | translate }}
+                    </span>
+                </div>
+
+                <div class="sidebar-item"
+                    (click)="resetShow(); showLogs = true; showLogsWelcome = true; fillAvailableLogs(); foundLog = false; setPaginator('logs')">
+                    <div class="sidebar-icon-container">
+                        <fa-icon [icon]="['fas', 'envelope']"></fa-icon>
+                    </div>
+                    <span>
+                        {{ 'CNF.MENU.LOGS' | translate }}
+                    </span>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="main-container w-100">
+        <a class="top-right-am-link" routerLink="/am" *ngIf="!accessGranted">
+            <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
+        </a>
+
+        <div class="main-view-div" [hidden]="accessGranted || accessDenied || adminRecovery || offerAdminRecovery">
+            <div class="qr-code fixed-width">
+                <div>
+                    <div *ngIf="websocketDisconnected" class="disconnect-overlay"
+                        (click)="refreshWebsocketDisconnect('regular')">
+                        <p>{{ 'AM.disconnected' | translate }}</p>
+                    </div>
+                    <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #qrCodeCanvas></canvas>
+                </div>
+                <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'CNF.scan_code' | translate }}</p>
+                <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'CNF.scan_code2' | translate }}</p>
+            </div>
+        </div>
+
+        <div class="container" *ngIf="accessGranted && !accessDenied && overlayClosed && showSettings">
+            <div class="content">
+                <div class="content-div row  justify-content-center">
+                    <div class="col-xl-12 col-lg-11 col-md-11 col-sm-12 col-8 content-div">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
+                                <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.settings' | translate }}</h6>
+                            </div>
+                            <div class="card-body d-flex flex-row flex-sm-row flex-md-row flex-lg-row settings">
+                                <span class="language"> {{ 'CNF.language' | translate }} </span>
+                                <ngx-flag-picker [customLabels]="customLabels"
+                                    [selectedCountryCode]="selectedCountryCode" [countryCodes]="countryCodes"
+                                    (changedCountryCode)="changeSelectedCountryCode($event)">
+                                </ngx-flag-picker>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="container"
-        *ngIf="accessGranted && !accessDenied && overlayClosed && showAm  && !showAdmins && !showSettings">
-        <div class="content">
-            <div
-                class="row content-div row d-flex flex-column flex-sm-column flex-md-row flex-lg-row text-center align-items-stretch">
-                <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-8 content-div d-flex">
-                    <div class="card shadow mb-4 flex-grow-1">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
-                            <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.which_credentials' | translate }}
-                            </h6>
-                         </div>
-                        <div
-                            class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list">
-                            <label class="attribute-options">
-                                <input type="checkbox" [(ngModel)]="pcrChecked" (change)="saveSettings()">
-                                {{ 'ATTRIBUTES.HEALTH.vtestcorpcr' | translate }}
-                            </label>
-                            <label class="attribute-options">
-                                <input type="checkbox" [(ngModel)]="antiChecked" (change)="saveSettings()">
-                                {{ 'ATTRIBUTES.HEALTH.vtestcoranti' | translate }}
-                            </label>
-                            <label class="attribute-options">
-                                <input type="checkbox" [(ngModel)]="lampChecked" (change)="saveSettings()">
-                                {{ 'ATTRIBUTES.HEALTH.vtestcorlamp' | translate }}
-                            </label>
-                            <label class="attribute-options">
-                                <input type="checkbox" [(ngModel)]="modernChecked" (change)="saveSettings()">
-                                {{ 'ATTRIBUTES.HEALTH.vpasscormodern' | translate }}
-                            </label>
-                            <label class="attribute-options">
-                                <input type="checkbox" [(ngModel)]="pfizerChecked" (change)="saveSettings()">
-                                {{ 'ATTRIBUTES.HEALTH.vpasscorpfizer' | translate }}
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-8 content-div d-flex">
-                    <div class="card shadow mb-4 flex-grow-1">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
-                            <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.which_credentials' | translate }}
-                            </h6>
-                        </div>
-                        <div
-                            class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list">
-                            <label class="attribute-options">
-                                <input type="checkbox" [(ngModel)]="airChecked" (change)="saveSettings()">
-                                {{ 'ATTRIBUTES.CUSTOM.airticket' | translate }}
-                            </label>
-                            <label class="attribute-options">
-                                <input type="checkbox" [(ngModel)]="socChecked" (change)="saveSettings()">
-                                {{ 'ATTRIBUTES.CUSTOM.socticket' | translate }}
-                            </label>
-                            <label class="attribute-options">
-                                <input type="checkbox" [(ngModel)]="fesChecked" (change)="saveSettings()">
-                                {{ 'ATTRIBUTES.CUSTOM.festicket' | translate }}
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-8 content-div d-flex">
-                    <div class="card shadow mb-4 flex-grow-1">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
-                            <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.allow_demo' | translate }}</h6>
-                        </div>
-                        <div
-                            class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-row justify-content-center align-items-center">
-                            <label class="status">
-                                <ui-switch [checked]="existsData('allowDemo') ? true : false"
-                                    (valueChange)="updateDemoAllowed()"
-                                    uncheckedLabel="{{ 'CNF.not_allowed' | translate }}"
-                                    checkedLabel="{{ 'CNF.allowed' | translate }}"></ui-switch>
-                            </label>
+        <div class="container"
+            *ngIf="accessGranted && !accessDenied && overlayClosed && !showAm && !showAdmins && !showSettings && !showLogs && !showWhitelist">
+            <div class="content">
+                <div class="content-div row  justify-content-center">
+                    <div class="col-xl-12 col-lg-11 col-md-11 col-sm-10 col-8 content-div">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
+                                <h6 class="m-0 font-weight-bold text-primary">{{ 'PAGES.CONFIG.TITLE' | translate }}
+                                </h6>
+                            </div>
+                            <div
+                                class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-row justify-content-center text-center">
+                                <p>{{ 'CNF.welcome_message1' | translate }} <br />
+                                    {{ 'CNF.welcome_message2' | translate }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div
-                class="row content-div row d-flex flex-column flex-sm-column flex-md-row flex-lg-row text-center align-items-center">
-                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 content-div">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
-                            <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.whitelist' | translate }} </h6>
-                            <button class="btn btn-success w-10 right"
-                                *ngIf="existsData('WhitelistEnabled') && existsData('selectedWhitelist')"
-                                (click)="setupWebRtc('whitelist'); addToWhitelist = true;">{{ 'CNF.add_whitelist' |
-                                translate }}
-                            </button>
-                            <button class="btn btn-danger w-10 left" *ngIf="existsData('selectedWhitelist')"
-                                (click)="confirmDelete = true;">{{ 'CNF.delete' | translate }}
-                            </button>
+        <div class="container" *ngIf="accessGranted && !accessDenied && showLogs">
+            <div class="content">
+                <div class="content-div row  justify-content-center">
+                    <div class="col-xl-12 col-lg-11 col-md-11 col-sm-10 col-8 content-div">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
+                                <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.MENU.LOGS' | translate }} </h6>
+                                <mat-form-field appearance="fill" class="right">
+                                    <mat-label>Pick a date</mat-label>
+                                    <input #dateInput matInput [matDatepicker]="dp1"
+                                        (dateChange)="getRightDateAndLogs($event)" disabled>
+                                    <mat-datepicker-toggle matSuffix [for]="dp1"></mat-datepicker-toggle>
+                                    <mat-datepicker #dp1 disabled="false"></mat-datepicker>
+                                </mat-form-field>
+                            </div>
+                            <div
+                                class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center text-center">
+                                <p *ngIf="showLogsWelcome">
+                                    {{ 'CNF.logs_welcome_1' | translate }} <br />
+                                    {{ 'CNF.logs_welcome_2' | translate }}
+                                </p>
+                                <p *ngIf="!foundLog && !showLogsWelcome">
+                                    {{ 'CNF.no_log_found_1' | translate }} <br />
+                                    {{ 'CNF.no_log_found_2' | translate }}
+                                </p>
+                                <table mat-table [dataSource]="dataSource" *ngIf="foundLog">
+
+                                    <ng-container matColumnDef="type">
+                                        <th mat-header-cell *matHeaderCellDef class="set-width"> {{ 'CNF.logs_type' |
+                                            translate }} </th>
+                                        <td mat-cell *matCellDef="let line" class="text-left"> {{'CNF.type' |
+                                            translate:{ type: line.type } }}</td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="time">
+                                        <th mat-header-cell *matHeaderCellDef class="set-width"> {{ 'CNF.logs_time' |
+                                            translate }} </th>
+                                        <td mat-cell *matCellDef="let line" class="text-left"> {{line.time}} </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="message">
+                                        <th mat-header-cell *matHeaderCellDef> {{ 'CNF.logs_message' | translate }}
+                                        </th>
+                                        <td mat-cell *matCellDef="let line" class="text-left"> {{'CNF.message' |
+                                            translate:{ type: line.messageType, user: line.user } }} </td>
+                                    </ng-container>
+
+                                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                                </table>
+                                <mat-paginator [pageSizeOptions]="[3]" [hidden]="!foundLog" showFirstLastButtons>
+                                </mat-paginator>
+                            </div>
                         </div>
-                        <div class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list"
-                            *ngIf="!existsData('selectedWhitelist')">
-                            <label class="attribute-options">
-                                <input type="checkbox" name="choice" [(ngModel)]="emailWhitelist"
-                                    (click)="phoneWhitelist = false; emailWhitelist = true;">
-                                {{ 'ATTRIBUTES.EMAIL.email' | translate }}
-                            </label>
-                            <label class="attribute-options">
-                                <input type="checkbox" name="choice" [(ngModel)]="phoneWhitelist"
-                                    (click)="emailWhitelist = false; phoneWhitelist = true;">
-                                {{ 'ATTRIBUTES.PHONE.phone' | translate }}
-                            </label>
-                            <button class="btn btn-success createButton"
-                                *ngIf="phoneWhitelist === true || emailWhitelist === true;"
-                                (click)="makeWhitelist();">{{ 'CNF.create' |
-                                translate }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container" *ngIf="accessGranted && !accessDenied && overlayClosed && showAdmins ">
+            <div class="content">
+                <div
+                    class="content-div row d-flex flex-column flex-sm-column flex-md-column flex-lg-column text-center align-items-center">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-8 content-div">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
+                                <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.admins' | translate }}</h6>
+                                <button class="btn btn-success w-10 right"
+                                    (click)="addAdmin = true; setupWebRtc('addAdmin'); setRequestedData()">{{ 'CNF.add'
+                                    |
+                                    translate }}</button>
+                            </div>
+                            <div
+                                class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center">
+                                <table mat-table [dataSource]="adminDataSource" *ngIf="admins.length > 0">
+
+                                    <ng-container matColumnDef="email">
+                                        <th mat-header-cell *matHeaderCellDef class="set-width"> E-Mail </th>
+                                        <td mat-cell *matCellDef="let user" class="text-left"> {{ user.email }}</td>
+                                    </ng-container>
+
+                                    <div [hidden]="!admins.length > 1">
+                                        <ng-container matColumnDef="remove">
+                                            <th mat-header-cell *matHeaderCellDef
+                                                class="padding-left-remove-column remove-right-padding"> {{ 'CNF.remove'
+                                                | translate }}</th>
+                                            <td mat-cell *matCellDef="let user; let i = index"
+                                                class="remove-right-padding"> <button
+                                                    class="btn btn-danger w-25 margin-left-remove-column"
+                                                    (click)="deleteFromList(1, i)">{{
+                                                    'CNF.remove' | translate }}</button> </td>
+                                        </ng-container>
+                                    </div>
+
+                                    <tr mat-header-row *matHeaderRowDef="adminDisplayedColumns"></tr>
+                                    <tr mat-row *matRowDef="let row; columns: adminDisplayedColumns;"></tr>
+                                </table>
+                                <mat-paginator [pageSizeOptions]="[3]" [hidden]="!admins.length > 0"
+                                    showFirstLastButtons></mat-paginator>
+                            </div>
                         </div>
-                        <div class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center align-items-center"
-                            *ngIf="existsData('selectedWhitelist')">
-                            <label class="status">
-                                <ui-switch [checked]="existsData('WhitelistEnabled') ? true : false"
-                                    (valueChange)="updateWhitelistEnabled()"
-                                    uncheckedLabel="{{ 'CNF.disabled' | translate }}"
-                                    checkedLabel="{{ 'CNF.enabled' | translate }}"></ui-switch>
-                            </label>
-                            <table class="table margin-top"
-                                *ngIf="existsData('WhitelistEnabled') && whitelist.length > 0">
-                                <thead>
-                                    <th scope="col">#</th>
-                                    <th scope="col" class="table-credential-title">{{ 'CNF.linked_credential' |
-                                        translate }}</th>
-                                    <th scope="col"> {{ 'CNF.remove' | translate }}
-                                    </th>
-                                </thead>
-                                <tbody>
-                                    <tr *ngFor="let whitelisted of whitelist; index as i;">
-                                        <th scope="row">{{ i + 1}}</th>
-                                        <td class="table-credential"> {{ whitelisted }} </td>
-                                        <td>
-                                            <button class="btn btn-danger w-50  " (click)="deleteFromList(2, i)">{{
-                                                'CNF.remove' | translate }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container"
+            *ngIf="accessGranted && !accessDenied && overlayClosed && showAm  && !showAdmins && !showSettings && !showWhitelist">
+            <div class="content">
+                <div
+                    class="row content-div row d-flex flex-column flex-sm-column flex-md-row flex-lg-row text-center align-items-stretch">
+                    <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-8 content-div d-flex">
+                        <div class="card shadow mb-4 flex-grow-1">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
+                                <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.which_credentials' | translate }}
+                                </h6>
+                            </div>
+                            <div
+                                class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list">
+                                <label class="attribute-options">
+                                    <input type="checkbox" [(ngModel)]="pcrChecked" (change)="saveSettings()">
+                                    {{ 'ATTRIBUTES.HEALTH.vtestcorpcr' | translate }}
+                                </label>
+                                <label class="attribute-options">
+                                    <input type="checkbox" [(ngModel)]="antiChecked" (change)="saveSettings()">
+                                    {{ 'ATTRIBUTES.HEALTH.vtestcoranti' | translate }}
+                                </label>
+                                <label class="attribute-options">
+                                    <input type="checkbox" [(ngModel)]="lampChecked" (change)="saveSettings()">
+                                    {{ 'ATTRIBUTES.HEALTH.vtestcorlamp' | translate }}
+                                </label>
+                                <label class="attribute-options">
+                                    <input type="checkbox" [(ngModel)]="modernChecked" (change)="saveSettings()">
+                                    {{ 'ATTRIBUTES.HEALTH.vpasscormodern' | translate }}
+                                </label>
+                                <label class="attribute-options">
+                                    <input type="checkbox" [(ngModel)]="pfizerChecked" (change)="saveSettings()">
+                                    {{ 'ATTRIBUTES.HEALTH.vpasscorpfizer' | translate }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-8 content-div d-flex">
+                        <div class="card shadow mb-4 flex-grow-1">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
+                                <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.which_credentials' | translate }}
+                                </h6>
+                            </div>
+                            <div
+                                class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list">
+                                <label class="attribute-options">
+                                    <input type="checkbox" [(ngModel)]="airChecked" (change)="saveSettings()">
+                                    {{ 'ATTRIBUTES.CUSTOM.airticket' | translate }}
+                                </label>
+                                <label class="attribute-options">
+                                    <input type="checkbox" [(ngModel)]="socChecked" (change)="saveSettings()">
+                                    {{ 'ATTRIBUTES.CUSTOM.socticket' | translate }}
+                                </label>
+                                <label class="attribute-options">
+                                    <input type="checkbox" [(ngModel)]="fesChecked" (change)="saveSettings()">
+                                    {{ 'ATTRIBUTES.CUSTOM.festicket' | translate }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-8 content-div d-flex">
+                        <div class="card shadow mb-4 flex-grow-1">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
+                                <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.allow_demo' | translate }}</h6>
+                            </div>
+                            <div
+                                class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-row justify-content-center align-items-center">
+                                <label class="status">
+                                    <ui-switch [checked]="existsData('allowDemo') ? true : false"
+                                        (valueChange)="updateDemoAllowed()"
+                                        uncheckedLabel="{{ 'CNF.not_allowed' | translate }}"
+                                        checkedLabel="{{ 'CNF.allowed' | translate }}"></ui-switch>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container"
+            *ngIf="accessGranted && !accessDenied && overlayClosed && !showAm  && !showAdmins && !showSettings && showWhitelist">
+            <div class="content">
+                <div
+                    class="row content-div row d-flex flex-column flex-sm-column flex-md-row flex-lg-row text-center align-items-center">
+                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 content-div">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
+                                <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.whitelist' | translate }} </h6>
+                                <button class="btn btn-success w-10 right"
+                                    *ngIf="existsData('WhitelistEnabled') && existsData('selectedWhitelist')"
+                                    (click)="setupWebRtc('whitelist'); addToWhitelist = true;">{{ 'CNF.add_whitelist' |
+                                    translate }}
+                                </button>
+                                <button class="btn btn-danger w-10 left" *ngIf="existsData('selectedWhitelist')"
+                                    (click)="confirmDelete = true;">{{ 'CNF.delete' | translate }}
+                                </button>
+                            </div>
+                            <div class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list"
+                                *ngIf="!existsData('selectedWhitelist')">
+                                <label class="attribute-options">
+                                    <input type="checkbox" name="choice" [(ngModel)]="emailWhitelist"
+                                        (click)="phoneWhitelist = false; emailWhitelist = true;">
+                                    {{ 'ATTRIBUTES.EMAIL.email' | translate }}
+                                </label>
+                                <label class="attribute-options">
+                                    <input type="checkbox" name="choice" [(ngModel)]="phoneWhitelist"
+                                        (click)="emailWhitelist = false; phoneWhitelist = true;">
+                                    {{ 'ATTRIBUTES.PHONE.phone' | translate }}
+                                </label>
+                                <button class="btn btn-success createButton"
+                                    *ngIf="phoneWhitelist === true || emailWhitelist === true;"
+                                    (click)="makeWhitelist();">{{ 'CNF.create' |
+                                    translate }}</button>
+                            </div>
+                            <div class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center"
+                                *ngIf="existsData('selectedWhitelist')">
+                                <label class="status align-self-center">
+                                    <ui-switch [checked]="existsData('WhitelistEnabled') ? true : false"
+                                        (valueChange)="updateWhitelistEnabled(); setPaginator('whitelist')"
+                                        uncheckedLabel="{{ 'CNF.disabled' | translate }}"
+                                        checkedLabel="{{ 'CNF.enabled' | translate }}"></ui-switch>
+                                </label>
+                                <table mat-table [dataSource]="whitelistDataSource"
+                                    *ngIf="existsData('WhitelistEnabled') && whitelist.length > 0">
+
+                                    <ng-container matColumnDef="number">
+                                        <th mat-header-cell *matHeaderCellDef class="set-width"> # </th>
+                                        <td mat-cell *matCellDef="let credential; let i = index" class="text-left"> {{ i
+                                            + 1 }} </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="credential">
+                                        <th mat-header-cell *matHeaderCellDef class="set-width"> {{
+                                            'CNF.linked_credential' | translate }} </th>
+                                        <td mat-cell *matCellDef="let credential" class="text-left"> {{ credential }}
                                         </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="remove">
+                                        <th mat-header-cell *matHeaderCellDef
+                                            class="padding-left-remove-column remove-right-padding"> {{ 'CNF.remove' |
+                                            translate }} </th>
+                                        <td mat-cell *matCellDef="let credential; let i = index"
+                                            class="remove-right-padding"> <button
+                                                class="btn btn-danger w-25 margin-left-remove-column"
+                                                (click)="deleteFromList(2, i)">{{ 'CNF.remove' | translate }}</button>
+                                        </td>
+                                    </ng-container>
+
+                                    <tr mat-header-row *matHeaderRowDef="whitelistDisplayedColumns"></tr>
+                                    <tr mat-row *matRowDef="let row; columns: whitelistDisplayedColumns;"></tr>
+                                </table>
+                                <mat-paginator [pageSizeOptions]="[3]"
+                                    [hidden]="!existsData('WhitelistEnabled') || !whitelist.length > 0"
+                                    showFirstLastButtons></mat-paginator>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -477,8 +534,3 @@
         </div>
     </div>
 </div>
-
-
-<!-- <a routerLink="/home" class="logout"> -->
-    <!-- {{ 'CNF.logout' | translate }}
-</a> -->

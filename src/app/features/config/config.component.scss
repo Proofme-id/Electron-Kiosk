@@ -47,6 +47,24 @@ $flag-icon-css-path: '~flag-icon-css/flags' !default;
       width: 125px;
     }
 
+    .padding-left-remove-column {
+      padding-left: 10px;
+      text-align: right
+    }
+
+    .mat-table {
+      width: 100%
+    }
+
+
+    .remove-right-padding {
+      padding-right: 0;
+    }
+    .margin-left-remove-column {
+      margin-left: 75%;
+      padding-right: 0;
+    }
+
     .header-main-div {
         background-color: #006599;
         display: flex;
@@ -319,11 +337,6 @@ $flag-icon-css-path: '~flag-icon-css/flags' !default;
       
       $blue-darken: #006599;
       z-index: 1;
-      position: absolute;
-      right: auto;
-      left: 0;
-      top: 0;
-      bottom: auto;
       height: 100%;
       background-color: #221E2B;
       display: block;
@@ -336,20 +349,20 @@ $flag-icon-css-path: '~flag-icon-css/flags' !default;
   
       .logo {
           display: none;
-  
+          height: 80px;
           img {
               margin-top: 18px;
-              max-width: 190px;
-              max-height: 60px;
+              max-width: 150px;
+              height: 60px;
           }
       }
   
       .logo-small {
-  
+        height: 80px;
           img {
               max-width: 60px;
               margin-top: 20px;
-              margin-left: 2px;
+              height: 60px;
           }
       }
   

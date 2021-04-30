@@ -30,6 +30,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   readInterface;
   availableLogs: string[] = [];
   @ViewChild(MatPaginator) paginator: MatPaginator;
+
   displayedColumns: string[] = ['type', 'time', 'message'];
   @ViewChild("qrCodeCanvas")
   qrCodeCanvas: ElementRef;
@@ -74,7 +75,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   showSettings: boolean = false;
   showAm: boolean = false;
   showConfigWelcome: boolean = true;
-  selectedCountryCode = this.StorageProvider.getKey('language') === "en" ? "gb" : this.StorageProvider.getKey('language');
+  selectedCountryCode = this.StorageProvider.getKey('language') === "en" ? "gb" : (this.StorageProvider.getKey('language') ? this.StorageProvider.getKey('language') : "gb");
   countryCodes = ['gb', 'nl'];
   customLabels: Record<string, string> = { "gb": "English", "nl": "Nederlands" }
   requestedCredentials: any = this.StorageProvider.getKey('requestedCredentials')
@@ -98,8 +99,12 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   showLogs: boolean = false;
   foundLog: boolean;
   dataSource = new MatTableDataSource<logInfo>(logLines);
+  adminDataSource = new MatTableDataSource<string>(this.admins);
   showLogsWelcome: boolean;
-
+  adminDisplayedColumns: string[] = (this.admins.length > 1 ? ['email', 'remove'] : ['email']);
+  whitelistDataSource = new MatTableDataSource<string>(this.whitelist);
+  whitelistDisplayedColumns: string[] = (this.admins.length > 1 ? ['number','credential', 'remove'] : ['credential']);
+  showWhitelist: boolean = false;
   constructor(
     private router: Router,
     private appStateFacade: AppStateFacade,
@@ -110,6 +115,29 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     private translateService: TranslateService,
   ) {
     super();
+  }
+
+
+  setPaginator(type: string): void {
+    if (type === 'admin') {
+      setTimeout(() => {
+        this.ngZone.run(() => {   
+          this.adminDataSource.paginator = this.paginator;
+        });
+      }, 25);
+    }
+    else if (type === 'logs'){
+      this.ngZone.run(() => {
+        this.dataSource.paginator = this.paginator;
+      });
+    }
+    else {
+      setTimeout(() => {
+        this.ngZone.run(() => {   
+            this.whitelistDataSource.paginator = this.paginator;
+        });
+      }, 25);
+    }
   }
 
   updateWhitelistEnabled(): void {
@@ -125,6 +153,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     this.showConfigWelcome = false;
     this.showAm = false;
     this.showSettings = false;
+    this.showWhitelist = false
     this.showLogs = false;
   }
 
@@ -161,6 +190,9 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       this.router.navigate(['/home'])
     }
   }
+
+
+  
 
   getRightDateAndLogs(event) {
     var rightDate = event.value.getFullYear() + "-" + event.value.toISOString().substr(5, 2) + "-" + event.value.getDate();
@@ -239,19 +271,16 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   getCorrectValues() {
-    if (this.StorageProvider.hasKey('Custom')) {
-      const custom = this.StorageProvider.getKey("Custom")
-      this.airChecked = custom["AIR_TICKET"]
-      this.socChecked = custom["SOC_TICKET"]
-      this.fesChecked = custom["FES_TICKET"]
-    }
-    if (this.StorageProvider.hasKey('Health')) {
-      const health = this.StorageProvider.getKey("Health")
-      this.pcrChecked = health["VTEST_COR_PCR"],
-        this.antiChecked = health["VTEST_COR_ANTIGEEN"],
-        this.lampChecked = health["VTEST_COR_LAMP"],
-        this.modernChecked = health["VPASS_COR_MODERNA"],
-        this.pfizerChecked = health["VPASS_COR_PFIZER"]
+    if (this.StorageProvider.hasKey('Credentials')) {
+      const credentials = this.StorageProvider.getKey("Credentials")
+      this.airChecked = credentials["AIR_TICKET"]
+      this.socChecked = credentials["SOC_TICKET"]
+      this.fesChecked = credentials["FES_TICKET"]
+      this.pcrChecked = credentials["VTEST_COR_PCR"],
+      this.antiChecked = credentials["VTEST_COR_ANTIGEEN"],
+      this.lampChecked = credentials["VTEST_COR_LAMP"],
+      this.modernChecked = credentials["VPASS_COR_MODERNA"],
+      this.pfizerChecked = credentials["VPASS_COR_PFIZER"]
     }
   }
 
@@ -430,6 +459,8 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     }
     else if (this.addAdmin === true && this.adminExistsAndIsCorrect(this.admins, data) === 3) {
       this.admins.push({ did: data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10), email: data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, credentialobject: data.credentialObject })
+      this.adminDisplayedColumns = (this.admins.length > 1 ? ['email', 'remove'] : ['email']);
+      this.adminDataSource.paginator = this.paginator;
       this.StorageProvider.setKey('AdminInfo', this.admins)
       this.ngZone.run(() => {
         this.addAdmin = false;
@@ -533,6 +564,9 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       if (admin.email === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value && admin.did === data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10)) {
         return 1;
       }
+      else if (this.accessGranted && admin.email === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
+        return 1;
+      }
       else if (admin.email === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
         return 2;
       }
@@ -557,6 +591,8 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       this.whitelist.splice(number, 1)
       this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
     }
+    this.adminDisplayedColumns = (this.admins.length > 1 ? ['email', 'remove'] : ['email']);
+    this.adminDataSource.paginator = this.paginator;
   }
 }
 

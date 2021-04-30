@@ -28,6 +28,7 @@ export class AmComponent extends BaseComponent implements OnInit {
   accessGranted = false;
   accessDenied = false;
   whitelist = this.StorageProvider.getKey("whitelistedUsers")
+  showQR: boolean;
 
   constructor(
     private router: Router,
@@ -138,9 +139,12 @@ export class AmComponent extends BaseComponent implements OnInit {
   requestData(): IRequestedCredentials {
     let request: IRequestedCredentials;
     let credentials: boolean[]
-    if (this.StorageProvider.getKey("credentials")) {
+    if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true)) {
+      this.showQR = true;
       credentials = this.StorageProvider.getKey("Credentials")
-    } else { return request; }
+    } else { 
+      return request;
+    }
 
     if (credentials && !this.StorageProvider.hasKey("WhitelistEnabled")) {
       const allCredentials = [
@@ -196,15 +200,15 @@ export class AmComponent extends BaseComponent implements OnInit {
         "VPASS_COR_MODERNA",
         "VPASS_COR_PFIZER"
       ]
-      const allFiltered = [].concat(allCredentials.filter(x => credentials[0][x.key] === true), allCredentials.filter(x => credentials[1][x.key] === true))
-      const filteredMinRequired = healthMinRequired.filter(x => credentials[1][x] === true)
+      const allFiltered = allCredentials.filter(x => credentials[x.key] === true)
+      const filteredMinRequired = healthMinRequired.filter(x => credentials[x] === true)
 
       request = {
         by: "Kiosk",
         description: "Access controle",
         credentials: allFiltered,
         minimumRequired: {
-          amount: 1,
+          amount: (filteredMinRequired.length > 0) ? 1 : 0,
           data: filteredMinRequired
         }
       };
@@ -299,14 +303,12 @@ export class AmComponent extends BaseComponent implements OnInit {
       }
       else if (!this.StorageProvider.hasKey("WhitelistEnabled")) {
         console.log("Success!!!")
+        this.openDoor(1)
         this.ngZone.run(() => {
           this.accessDenied = false;
           this.accessGranted = true;
         });
       }
-      setTimeout(() => {
-        this.refreshWebsocketDisconnect()
-      }, 5000);
     }
   }
 
