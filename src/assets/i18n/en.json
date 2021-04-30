@@ -40,7 +40,8 @@
 			"WHITELIST": "Whitelist"
 		},
 		"welcome_first_time1": "Welcome to the control panel.",
-		"welcome_first_time2": "Please select a credential to request in Access to finish the first time initialization",
+		"welcome_first_time2": "Please navigate to Access and request a credential",
+		"welcome_first_time3": "to finish the first time startup.",
 		"add": "Add",
 		"add_admin1": "Let the new Admin scan this QR-Code with",
 		"add_admin2": "their ProofMe.ID to become an new Admin",

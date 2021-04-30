@@ -105,6 +105,8 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   whitelistDataSource = new MatTableDataSource<string>(this.whitelist);
   whitelistDisplayedColumns: string[] = (this.admins.length > 1 ? ['number','credential', 'remove'] : ['credential']);
   showWhitelist: boolean = false;
+  showTutorialStep: number;
+
   constructor(
     private router: Router,
     private appStateFacade: AppStateFacade,
@@ -182,10 +184,10 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     })
     if (!this.StorageProvider.hasKey('firstStartupCompleted')) {
       this.StorageProvider.setKey('firstStartupCompleted', 'First time initialization Completed: ' + Date.now());
-      this.StorageProvider.setKey('ShowFSCompletedMessage', true)
+      this.showTutorialStep = 1;
       setTimeout(() => {
         this.ngZone.run(() => {
-          this.StorageProvider.deleteKey('ShowFSCompletedMessage')
+          this.showTutorialStep = 0;
         });
       }, 2500);
     }
@@ -197,8 +199,10 @@ export class ConfigComponent extends BaseComponent implements OnInit {
         this.accessGranted = true;
         this.accessDenied = false;
         this.overlayClosed = true;
+        this.showTutorialStep = 2;
       });
     } 
+    
     this.log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.getCorrectValues();
     this.setupWebRtc("regular");
