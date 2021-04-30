@@ -130,7 +130,7 @@
         <h2> {{ 'PAGES.CONFIG.TITLE' | translate }} </h2>
     </div>
 
-    <a routerLink="/am" class="logout">
+    <a routerLink="/am" class="logout" *ngIf="existsData('firstStartupCompleted')">
         {{ 'CNF.logout' | translate }}
     </a>
 
@@ -254,9 +254,11 @@
                                 </h6>
                             </div>
                             <div
-                                class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-row justify-content-center text-center">
-                                <p>{{ 'CNF.welcome_message1' | translate }} <br />
-                                    {{ 'CNF.welcome_message2' | translate }}</p>
+                                class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center text-center">
+                                <p *ngIf="existsData('firstStartupCompleted')">{{ 'CNF.welcome_message1' | translate }} <br />
+                                    {{ 'CNF.welcome_message2' | translate }} </p>
+                                <p *ngIf="!existsData('firstStartupCompleted')"> {{ 'CNF.welcome_first_time1' | translate }} <br />
+                                    {{ 'CNF.welcome_first_time2' | translate }}</p>
                             </div>
                         </div>
                     </div>
@@ -272,7 +274,7 @@
                             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
                                 <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.MENU.LOGS' | translate }} </h6>
                                 <mat-form-field appearance="fill" class="right">
-                                    <mat-label>Pick a date</mat-label>
+                                    <mat-label>{{ 'CNF.pick_date' | translate }}</mat-label>
                                     <input #dateInput matInput [matDatepicker]="dp1"
                                         (dateChange)="getRightDateAndLogs($event)" disabled>
                                     <mat-datepicker-toggle matSuffix [for]="dp1"></mat-datepicker-toggle>

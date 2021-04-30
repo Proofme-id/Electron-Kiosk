@@ -6,7 +6,10 @@
 		"no_requested_data": "Please select the data you'd like to request in the config.",
 		"scan_code": "Scan the QR-code with the",
 		"scan_code2": "ProofMe App.",
-		"success-message": "Welcome!"
+		"success-message": "Welcome!",
+		"first_scan": "Welcome to the ProofMe.ID Kiosk, Please scan the",
+		"first_scan2": "QR-Code to become an admin and configure your Kiosk.",
+		"first_scan3": "First time initialization"
 	},
 	"ATTRIBUTES": {
 		"CUSTOM": {
@@ -36,6 +39,8 @@
 			"SETTINGS": "Settings",
 			"WHITELIST": "Whitelist"
 		},
+		"welcome_first_time1": "Welcome to the control panel.",
+		"welcome_first_time2": "Please select a credential to request in Access to finish the first time initialization",
 		"add": "Add",
 		"add_admin1": "Let the new Admin scan this QR-Code with",
 		"add_admin2": "their ProofMe.ID to become an new Admin",
@@ -80,8 +85,8 @@
 		"which_credentials": "Allow which credentials?",
 		"whitelist": "Whitelist",
 		"type": "{type, select, warn{WARN} info{INFO} other{OTHER}}",
-		"message": "{type, select, 1{User {user} was denied access because of invalid credentials.} 2{User {user} logged into the configuration.} 3{User {user} was offered to recover their admin credentials.} 4{User {user} has recovered their admin credentials.} 5{User {user} was denied access to the configuration.} 6{User {user} was allowed access with a whitelist enabled. } 7{User {user} was denied access with a whitelist enabled. } other{Error. Related to {user}}}"
-
+		"message": "{type, select, 1{User {user} was denied access because of invalid credentials.} 2{User {user} logged into the configuration.} 3{User {user} was offered to recover their admin credentials.} 4{User {user} has recovered their admin credentials.} 5{User {user} was denied access to the configuration.} 6{User {user} was allowed access with a whitelist enabled. } 7{User {user} was denied access with a whitelist enabled. } other{Error. Related to {user}}}",
+		"pick_date": "Pick a date."
 	},
 	"INSTRUCTION_OVERLAY": {
 		"message": "Follow the instructions in the app"

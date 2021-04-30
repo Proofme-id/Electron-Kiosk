@@ -6,11 +6,12 @@
     <div class="col-xl-12 content-div mx-auto">
       <div class="card shadow mb-4 align-items-center">
         <div class="card-body text-center">
-          <div class="logo relative py-3 d-flex flex-row align-items-center">
+          <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.first_scan3' | translate }}</p>
+          <div class="logo relative py-3 d-flex flex-column align-items-center">
             <canvas #qrCodeCanvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''"></canvas>
           </div>
-          <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code' | translate }}</p>
-          <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code2' | translate }}</p>
+          <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.first_scan' | translate }}</p>
+          <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.first_scan2' | translate }}</p>
 
         </div>
         <ngx-flag-picker [customLabels]="customLabels" [selectedCountryCode]="selectedCountryCode"

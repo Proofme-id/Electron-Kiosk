@@ -6,7 +6,10 @@
 		"no_requested_data": "Selecteer alstublieft de data die u wilt opvragen in de config.",
 		"scan_code": "Scan de QR-Code met de",
 		"scan_code2": "ProofMe App.",
-		"success-message": "Welkom!"
+		"success-message": "Welkom!",
+		"first_scan": "Welkom in de ProofMe.ID kiosk. Scan alstublieft de",
+		"first_scan2": "QR-Code om een admin te worden en de kiosk te configureren.",
+		"first_scan3": "Eerste installatie"
 	},
 	"ATTRIBUTES": {
 		"CUSTOM": {
@@ -36,6 +39,8 @@
 			"SETTINGS": "Instellingen",
 			"WHITELIST": "Whitelist"
 		},
+		"welcome_first_time1": "Welkom in het configuratiescherm.",
+		"welcome_first_time2": "Selecteer alstublieft een gegeven in Toegang om de eerste installatie te voltooien.",
 		"add": "Toevoegen",
 		"add_admin1": "Scan de QR-Code met nieuwe beheerder's",
 		"add_admin2": "Proofme.ID app om een nieuwe beheerder te worden",
@@ -81,7 +86,8 @@
 		"which_credentials": "Welke gegevens wilt u toestaan?",
 		"whitelist": "Whitelist",
 		"type": "{type, select, warn{WAARSCHUWING} info{INFO} other{ANDER}}",
-		"message": "{type, select, 1{Gebruiker {user} heeft geen toegang gekregen vanwege invalide gegevens.} 2{Gebruiker {user} heeft ingelogd in de configuratie.} 3{Gebruiker {user} is aangeboden om zijn of haar admin gegevens te herstellen.} 4{Gebruiker {user} heeft zijn of haar admin gegevens hersteld.} 5{Gebruiker {user} heeft geen toegang gekregen tot de configuratie.} 6{Gebruiker {user} heeft toegang gekregen met een ingeschakelde whitelist. } 7{Gebruiker {user} heeft geen toegang gekregen met een ingeschakelde whitelist. } other{Error. Related to {user}}}"
+		"message": "{type, select, 1{Gebruiker {user} heeft geen toegang gekregen vanwege invalide gegevens.} 2{Gebruiker {user} heeft ingelogd in de configuratie.} 3{Gebruiker {user} is aangeboden om zijn of haar admin gegevens te herstellen.} 4{Gebruiker {user} heeft zijn of haar admin gegevens hersteld.} 5{Gebruiker {user} heeft geen toegang gekregen tot de configuratie.} 6{Gebruiker {user} heeft toegang gekregen met een ingeschakelde whitelist. } 7{Gebruiker {user} heeft geen toegang gekregen met een ingeschakelde whitelist. } other{Error. Related to {user}}}",
+		"pick_date": "Kies een datum."
 	},
 	"INSTRUCTION_OVERLAY": {
 		"message": "Volg de instructies in de app"

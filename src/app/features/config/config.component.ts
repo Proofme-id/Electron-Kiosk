@@ -180,19 +180,21 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       VPASS_COR_MODERNA: this.modernChecked,
       VPASS_COR_PFIZER: this.pfizerChecked
     })
+    if (!this.StorageProvider.hasKey('firstStartupCompleted')) this.StorageProvider.setKey('firstStartupCompleted', 'First time initialization Completed: ' + Date.now());
   }
 
   ngOnInit(): void {
+    if (!this.StorageProvider.hasKey('firstStartupCompleted')) {
+      this.ngZone.run(() => {
+        this.accessGranted = true;
+        this.accessDenied = false;
+        this.overlayClosed = true;
+      });
+    } 
     this.log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.getCorrectValues();
     this.setupWebRtc("regular");
-    if (!this.existsData('firstStartupCompleted')) {
-      this.router.navigate(['/home'])
-    }
-  }
-
-
-  
+  }  
 
   getRightDateAndLogs(event) {
     var rightDate = event.value.getFullYear() + "-" + event.value.toISOString().substr(5, 2) + "-" + event.value.getDate();

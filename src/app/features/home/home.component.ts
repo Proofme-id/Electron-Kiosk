@@ -95,16 +95,15 @@ export class HomeComponent extends BaseComponent implements OnInit {
       console.error(this.validCredentialObj);
     } else {
       this.ngZone.run(() => {
-        this.StorageProvider.setKey('firstStartupCompleted', 'First Startup Completed: ' + Date.now());
         this.StorageProvider.setKey('whitelistedUsers', [])
         this.StorageProvider.setKey('AdminInfo', [{ did: data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10), email: data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, credentialobject: data.credentialObject }])
         let request: IRequestedCredentials = {
           by: "Kiosk",
           description: "Access controle",
           credentials: []
-        };;
+        };
         this.StorageProvider.setKey('requestedCredentials', request)
-        this.router.navigate(['/am'])
+        this.router.navigate(['/config'])
       });
       setTimeout(() => {
         this.refreshWebsocketDisconnect()

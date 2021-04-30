@@ -54,9 +54,6 @@ export class AmComponent extends BaseComponent implements OnInit {
     log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.storeRightTrustedAuthorities()
     this.setupWebRtc();
-    if (!this.existsData('firstStartupCompleted')) {
-      this.router.navigate(['/home'])
-    }
   }
 
   openDoor(slot) {
