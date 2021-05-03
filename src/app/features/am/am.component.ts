@@ -266,7 +266,7 @@ export class AmComponent extends BaseComponent implements OnInit {
           if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 1) === 1) {
             console.log("Success!!!")
             log.info('6 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
-            this.openDoor(1)
+            this.openDoor(2)
             this.ngZone.run(() => {
               this.accessDenied = false;
               this.accessGranted = true;
@@ -284,7 +284,7 @@ export class AmComponent extends BaseComponent implements OnInit {
           if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 0) === 1) {
             console.log("Success!!!")
             log.info('6 ' + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
-            this.openDoor(1)
+            this.openDoor(2)
             this.ngZone.run(() => {
               this.accessDenied = false;
               this.accessGranted = true;
@@ -301,7 +301,7 @@ export class AmComponent extends BaseComponent implements OnInit {
       }
       else if (!this.StorageProvider.hasKey("WhitelistEnabled")) {
         console.log("Success!!!")
-        this.openDoor(1)
+        this.openDoor(2)
         this.ngZone.run(() => {
           this.accessDenied = false;
           this.accessGranted = true;
