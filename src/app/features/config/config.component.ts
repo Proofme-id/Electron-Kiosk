@@ -10,6 +10,8 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { marker as _ } from "@biesbjerg/ngx-translate-extract-marker";
 import { Router } from '@angular/router';
+import { RelayProvider } from '../../providers/relay-provider.service';
+import { Device } from 'node-hid';
 
 var logLines: logInfo[] = [];
 
@@ -99,15 +101,20 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   foundLog: boolean;
   dataSource = new MatTableDataSource<logInfo>(logLines);
   adminDataSource = new MatTableDataSource<string>(this.admins);
+  relayDataSource = new MatTableDataSource<Device>(this.relayProvider.searchRelays());
   showLogsWelcome: boolean;
   adminDisplayedColumns: string[] = (this.admins.length > 1 ? ['email', 'remove'] : ['email']);
   whitelistDataSource = new MatTableDataSource<string>(this.whitelist);
   whitelistDisplayedColumns: string[] = (this.admins.length > 1 ? ['number','credential', 'remove'] : ['credential']);
+  relayDisplayedColumns: string[] = ['name','slot', 'open']
   showWhitelist: boolean = false;
   showTutorialStep: number;
+  showRelays: boolean = false;
+  openDoorValue: number = (this.StorageProvider.hasKey('openDoorValue')) ? this.StorageProvider.getKey('openDoorValue') : 1;
 
   constructor(
     private router: Router,
+    private relayProvider: RelayProvider,
     private appStateFacade: AppStateFacade,
     private webRtcProvider: WebRtcProvider,
     private ngZone: NgZone,
@@ -156,10 +163,11 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     this.showSettings = false;
     this.showWhitelist = false
     this.showLogs = false;
+    this.showRelays = false;
   }
 
-  storeData(key: string): void {
-    this.StorageProvider.setKey(key, 'true');
+  storeData(key: string, value?: any): void {
+    this.StorageProvider.setKey(key, (value) ? value : 'true');
   }
 
   deleteData(key: string): void {
@@ -193,6 +201,8 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    console.log("RELAYS",this.relayDataSource.filteredData.length)
+    console.log("RELAYS",this.relayProvider.searchRelays())
     if (!this.StorageProvider.hasKey('firstStartupCompleted')) {
       this.ngZone.run(() => {
         this.accessGranted = true;
@@ -205,10 +215,22 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     this.log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.getCorrectValues();
     this.setupWebRtc("regular");
-  }  
+  } 
+  refreshRelays(): void {
+    this.relayDataSource = new MatTableDataSource<Device>(this.relayProvider.searchRelays());
+    if (this.relayDataSource.filteredData.length > 0) {
+      this.relayProvider.setActiveRelay(0)
+    }
+  }
+  
+  openDoor(slot) {
+    const timeout = 5000;
+    this.relayProvider.switchSlot(slot, timeout);
+    this.accessGranted = true;
+  }
 
-  getRightDateAndLogs(event) {
-    var rightDate = event.value.getFullYear() + "-" + event.value.toISOString().substr(5, 2) + "-" + event.value.getDate();
+  getRightDateAndLogs(event): void {
+    var rightDate: any = event.value.getFullYear() + "-" + event.value.toISOString().substr(5, 2) + "-" + (event.value.getDate() > 9 ? event.value.getDate() : "0" + event.value.getDate());
     this.ifLogAvailable(rightDate);
   }
 
@@ -271,7 +293,6 @@ export class ConfigComponent extends BaseComponent implements OnInit {
         provider: ['EMAIL'],
       }]
     };
-    this.selectedCredential = false;
   }
 
   deleteWhitelist(): void {
@@ -434,7 +455,9 @@ export class ConfigComponent extends BaseComponent implements OnInit {
 
   addUserToWhitelist(): void {
     if (this.whitelistedExistsAndIsCorrect(this.whitelist) === 0) {
-      this.whitelist.push(this.input)
+      this.ngZone.run(() => {
+        this.whitelist.push(this.input)
+      });
       this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
     } else if (this.whitelistedExistsAndIsCorrect(this.whitelist) === 1) {
       this.ngZone.run(() => {

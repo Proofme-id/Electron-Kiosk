@@ -37,8 +37,15 @@
 			"AM": "Toegang",
 			"LOGS": "Logboek",
 			"SETTINGS": "Instellingen",
-			"WHITELIST": "Whitelist"
+			"WHITELIST": "Whitelist",
+			"RELAYS": "Relays"
 		},
+		"refresh": "Refresh",
+		"open": "Open: ",
+		"relay_slot": "Relay Slot",
+		"relay_name": "Relay Naam",
+		"relay_list": "Relays",
+		"no_relays_found": "Geen relays gevonden, Verbind een relay en ververs het configuratiescherm.",
 		"welcome_first_time1": "Welkom in het configuratiescherm.",
 		"welcome_first_time2": "Ga alstublieft naar Toegang en selecteer een gegeven om op te vragen",
 		"welcome_first_time3": "om de installatie te voltooien.",
