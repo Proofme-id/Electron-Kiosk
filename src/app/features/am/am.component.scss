@@ -70,7 +70,20 @@
     background-color: #000;
   }
 
-  fa-icon {
+  .overlay-message-popup {
+    height: 360px;
+  }
+  
+  .bottom-right-email-button {
+    position: absolute;
+    right: 0;
+    left: auto;
+    top: auto;
+    bottom: 0;
+    color: white;
+  }
+
+  .top-right-config-link fa-icon {
     color: #aaaaaa
   }
 

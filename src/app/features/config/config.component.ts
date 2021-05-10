@@ -67,7 +67,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   adminRecoveryCompleted: boolean = false;
   adminRecovered: boolean = false;
   admins: any = this.StorageProvider.getKey('AdminInfo')
-  whitelist: string[] = this.StorageProvider.getKey('whitelistedUsers')
+  whitelist = this.StorageProvider.getKey('whitelistedUsers')
   addToWhitelist: boolean = false;
   showAddAdminQR: boolean = false;
   addAdmin: boolean = false;
@@ -105,7 +105,8 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   showLogsWelcome: boolean;
   adminDisplayedColumns: string[] = (this.admins.length > 1 ? ['email', 'remove'] : ['email']);
   whitelistDataSource = new MatTableDataSource<string>(this.whitelist);
-  whitelistDisplayedColumns: string[] = (this.admins.length > 1 ? ['number','credential', 'remove'] : ['credential']);
+  enableBiometrics: boolean = this.StorageProvider.hasKey('Whitelist') ? (this.StorageProvider.getKey('Whitelist').slice(1,2) === "1") ? true : false : false
+  whitelistDisplayedColumns: string[] = this.enableBiometrics === true ? ['credential', 'biometrics', 'remove'] : ['credential','remove']
   relayDisplayedColumns: string[] = ['name','slot', 'open']
   showWhitelist: boolean = false;
   showTutorialStep: number;
@@ -148,8 +149,17 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     }
   }
 
+  replaceAt(index: number, replacement: string, string: string): string {
+      if (index >= string.length) {
+          return string.valueOf();
+      }
+      return string.substring(0, index) + replacement + string.substring(index + 1);   
+  }
+
   updateWhitelistEnabled(): void {
-    this.existsData('WhitelistEnabled') ? this.deleteData('WhitelistEnabled') : this.storeData('WhitelistEnabled')
+    this.StorageProvider.getKey('Whitelist').slice(2,3) === "1" ? 
+    this.StorageProvider.setKey('Whitelist', this.replaceAt(2,"0", this.StorageProvider.getKey("Whitelist"))) :
+    this.StorageProvider.setKey('Whitelist', this.replaceAt(2,"1", this.StorageProvider.getKey("Whitelist")))
   }
 
   updateDemoAllowed(): void {
@@ -201,8 +211,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log("RELAYS",this.relayDataSource.filteredData.length)
-    console.log("RELAYS",this.relayProvider.searchRelays())
+    this.StorageProvider.hasKey('Whitelist') ? null : this.StorageProvider.setKey('Whitelist','')
     if (!this.StorageProvider.hasKey('firstStartupCompleted')) {
       this.ngZone.run(() => {
         this.accessGranted = true;
@@ -216,6 +225,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     this.getCorrectValues();
     this.setupWebRtc("regular");
   } 
+
   refreshRelays(): void {
     this.relayDataSource = new MatTableDataSource<Device>(this.relayProvider.searchRelays());
     if (this.relayDataSource.filteredData.length > 0) {
@@ -223,7 +233,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     }
   }
   
-  openDoor(slot) {
+  openDoor(slot): void {
     const timeout = 5000;
     this.relayProvider.switchSlot(slot, timeout);
     this.accessGranted = true;
@@ -296,15 +306,15 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   deleteWhitelist(): void {
+    this.StorageProvider.setKey('Whitelist', '')
     this.StorageProvider.setKey('whitelistedUsers', [])
     this.whitelist = this.StorageProvider.getKey('whitelistedUsers')
-    this.StorageProvider.deleteKey('WhitelistEnabled')
-    this.StorageProvider.deleteKey('selectedWhitelist')
     this.emailWhitelist = false;
     this.phoneWhitelist = false;
+    this.enableBiometrics = false;
   }
 
-  getCorrectValues() {
+  getCorrectValues(): void {
     if (this.StorageProvider.hasKey('Credentials')) {
       const credentials = this.StorageProvider.getKey("Credentials")
       this.airChecked = credentials["AIR_TICKET"]
@@ -437,26 +447,42 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   selectedWhitelist(): string {
-    if (this.StorageProvider.getKey('selectedWhitelist') === "email") {
+    if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "0") { // 0(000). Email
       return "email"
-    } else if (this.StorageProvider.getKey('selectedWhitelist') === "phone") {
+    } else if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "1") { // 1(000). Phone
       return "phone"
     }
   }
 
-  makeWhitelist(): void {
+  setWhitelistCredential() : void {
     if (this.emailWhitelist === true) {
-      this.StorageProvider.setKey('selectedWhitelist', 'email')
+      this.StorageProvider.setKey('Whitelist', "0000") // 0000 email, no biometrics, not enabled, not created
     } else if (this.phoneWhitelist === true) {
-      this.StorageProvider.setKey('selectedWhitelist', 'phone')
+      this.StorageProvider.setKey('Whitelist', "1000") // 1000 Phone, no biometrics, not enabled, not created
     }
-    this.StorageProvider.setKey("WhitelistEnabled", true)
+  }
+
+  makeWhitelist(): void {
+    if (this.enableBiometrics === true) {
+      this.StorageProvider.setKey('Whitelist', this.StorageProvider.getKey('Whitelist').slice(0,1) + "111") //1111 Phone, Biometrics, enabled, created
+    } else {
+      this.StorageProvider.setKey('Whitelist', this.StorageProvider.getKey('Whitelist').slice(0,1) + "011") //0011 Email, no biometrics, enabled, created
+    }
   }
 
   addUserToWhitelist(): void {
     if (this.whitelistedExistsAndIsCorrect(this.whitelist) === 0) {
       this.ngZone.run(() => {
-        this.whitelist.push(this.input)
+          this.whitelist.push({
+            credential: this.input,
+            biometrics: [],
+            hasBiometrics: 'Disabled',
+          })
+        this.ngZone.run(() => {
+          this.whitelistDataSource = new MatTableDataSource<string>(this.whitelist);
+          this.whitelistDisplayedColumns = (this.whitelist.length > 1 ? ['credential', 'biometrics', 'remove'] : ['credential', 'biometrics']);
+          this.whitelistDataSource.paginator = this.paginator;
+        })
       });
       this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
     } else if (this.whitelistedExistsAndIsCorrect(this.whitelist) === 1) {
@@ -490,6 +516,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       setTimeout(() => {
         this.refreshWebsocketDisconnect("regular")
         this.closeOverlay
+        this.accessDenied = false;
       }, 1500);
       console.error(this.validCredentialObj);
     }
@@ -558,12 +585,13 @@ export class ConfigComponent extends BaseComponent implements OnInit {
         this.ngZone.run(() => {
           this.refreshWebsocketDisconnect("regular")
           this.overlayClosed = true;
+          this.accessDenied = false;
         });
       }, 1500);
     }
   }
 
-  closeOverlay() {
+  closeOverlay(): void {
     this.overlayClosed = true;
   }
 
@@ -581,13 +609,13 @@ export class ConfigComponent extends BaseComponent implements OnInit {
 
   whitelistedExistsAndIsCorrect(whitelist: any): number {
     for (let whitelisted of whitelist) {
-      if (this.phoneChecked) {
-        if (whitelisted === this.input) {
+      if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "1") { // 1***. Phone
+        if (whitelisted.credential === this.input) {
           return 1;
         }
       }
-      else if (this.emailChecked) {
-        if (whitelisted === this.input) {
+      else if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "0") { // 0***. Email
+        if (whitelisted.credential === this.input) {
           return 1;
         }
       }
@@ -623,12 +651,18 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     if (list === 1) {
       this.admins.splice(number, 1)
       this.StorageProvider.setKey('AdminInfo', this.admins)
+      this.ngZone.run(() => {   
+        this.adminDisplayedColumns = (this.admins.length > 1 ? ['email', 'remove'] : ['email']);
+        this.adminDataSource.paginator = this.paginator;
+      })
     } else if (list === 2) {
       this.whitelist.splice(number, 1)
       this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
+      this.ngZone.run(() => {   
+        this.whitelistDisplayedColumns = (this.whitelist.length > 1 ? ['credential', 'biometrics' ,'remove'] : ['credential', 'biometrics']);
+        this.whitelistDataSource.paginator = this.paginator;
+      })
     }
-    this.adminDisplayedColumns = (this.admins.length > 1 ? ['email', 'remove'] : ['email']);
-    this.adminDataSource.paginator = this.paginator;
   }
 }
 

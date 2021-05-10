@@ -9,7 +9,8 @@
 		"success-message": "Welkom!",
 		"first_scan": "Welkom in de ProofMe.ID kiosk. Scan alstublieft de",
 		"first_scan2": "QR-Code om een admin te worden en de kiosk te configureren.",
-		"first_scan3": "Eerste installatie"
+		"first_scan3": "Eerste installatie",
+		"enroll": "Inschrijven"
 	},
 	"ATTRIBUTES": {
 		"CUSTOM": {
@@ -29,6 +30,9 @@
 		},
 		"PHONE": {
 			"phone": "Telefoonnummer"
+		},
+		"BIOMETRICS": {
+			"biometrics": "Biometrie"
 		}
 	},
 	"CNF": {
@@ -40,7 +44,7 @@
 			"WHITELIST": "Whitelist",
 			"RELAYS": "Relays"
 		},
-		"refresh": "Refresh",
+		"refresh": "Verversen",
 		"open": "Open: ",
 		"relay_slot": "Relay Slot",
 		"relay_name": "Relay Naam",
@@ -50,7 +54,7 @@
 		"welcome_first_time2": "Ga alstublieft naar Toegang en selecteer een gegeven om op te vragen",
 		"welcome_first_time3": "om de installatie te voltooien.",
 		"add": "Toevoegen",
-		"add_admin1": "Scan de QR-Code met nieuwe beheerder's",
+		"add_admin1": "Scan de QR-Code met de nieuwe beheerders",
 		"add_admin2": "Proofme.ID app om een nieuwe beheerder te worden",
 		"add_whitelist": "Gebruiker toevoegen",
 		"admin-recovered": "Uw admin rechten zijn opnieuw gelinkt",
@@ -95,7 +99,9 @@
 		"whitelist": "Whitelist",
 		"type": "{type, select, warn{WAARSCHUWING} info{INFO} other{ANDER}}",
 		"message": "{type, select, 1{Gebruiker {user} heeft geen toegang gekregen vanwege invalide gegevens.} 2{Gebruiker {user} heeft ingelogd in de configuratie.} 3{Gebruiker {user} is aangeboden om zijn of haar admin gegevens te herstellen.} 4{Gebruiker {user} heeft zijn of haar admin gegevens hersteld.} 5{Gebruiker {user} heeft geen toegang gekregen tot de configuratie.} 6{Gebruiker {user} heeft toegang gekregen met een ingeschakelde whitelist. } 7{Gebruiker {user} heeft geen toegang gekregen met een ingeschakelde whitelist. } other{Error. Related to {user}}}",
-		"pick_date": "Kies een datum."
+		"pick_date": "Kies een datum.",
+		"has_biometrics": "Biometrie",
+		"biometrics": "{type, select, Enabled{Biometrie gevonden} Disabled{Geen biometrie gevonden} other{ERROR}}"
 	},
 	"INSTRUCTION_OVERLAY": {
 		"message": "Volg de instructies in de app"

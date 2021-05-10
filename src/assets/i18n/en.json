@@ -9,7 +9,8 @@
 		"success-message": "Welcome!",
 		"first_scan": "Welcome to the ProofMe.ID Kiosk, Please scan the",
 		"first_scan2": "QR-Code to become an admin and configure your Kiosk.",
-		"first_scan3": "First time setup"
+		"first_scan3": "First time setup",
+		"enroll": "Enroll"
 	},
 	"ATTRIBUTES": {
 		"CUSTOM": {
@@ -29,6 +30,9 @@
 		},
 		"PHONE": {
 			"phone": "Phone number"
+		},
+		"BIOMETRICS": {
+			"biometrics": "Biometrics"
 		}
 	},
 	"CNF": {
@@ -95,7 +99,9 @@
 		"type": "{type, select, warn{WARN} info{INFO} other{OTHER}}",
 		"message": "{type, select, 1{User {user} was denied access because of invalid credentials.} 2{User {user} logged into the configuration.} 3{User {user} was offered to recover their admin credentials.} 4{User {user} has recovered their admin credentials.} 5{User {user} was denied access to the configuration.} 6{User {user} was allowed access with a whitelist enabled. } 7{User {user} was denied access with a whitelist enabled. } other{Error. Related to {user}}}",
 		"pick_date": "Pick a date.",
-		"completed_startup": "Congratulations! You've completed the first time startup."
+		"completed_startup": "Congratulations! You've completed the first time startup.",
+		"has_biometrics": "Biometrics",
+		"biometrics": "{type, select, Enabled{Biometrics found} Disabled{No biometrics found} other{ERROR}}"
 	},
 	"INSTRUCTION_OVERLAY": {
 		"message": "Follow the instructions in the app"

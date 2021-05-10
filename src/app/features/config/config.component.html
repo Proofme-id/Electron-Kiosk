@@ -41,11 +41,13 @@
     <div class="overlay-message-background" [hidden]="!addAdmin"></div>
     <div class="overlay-message-popup-add" [hidden]="!addAdmin">
         <div class="qr-code fixed-width">
-            <div *ngIf="websocketDisconnected" class="disconnect-overlay"
-                (click)="refreshWebsocketDisconnect('addAdmin')">
-                <p>{{ 'AM.disconnected' | translate }}</p>
+            <div>
+                <div *ngIf="websocketDisconnected" class="disconnect-overlay"
+                    (click)="refreshWebsocketDisconnect('addAdmin')">
+                    <p>{{ 'AM.disconnected' | translate }}</p>
+                </div>
+                <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #qrCodeCanvasAddAdmin></canvas>
             </div>
-            <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #qrCodeCanvasAddAdmin></canvas>
             <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'CNF.add_admin1' | translate }}</p>
             <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'CNF.add_admin2' | translate }}</p>
             <button class="btn btn-danger w-50 cancelButton" (click)="addAdmin = false;">{{ 'CNF.cancel' |
@@ -58,12 +60,12 @@
 <div class="overlay-message" *ngIf="addToWhitelist">
     <div class="overlay-message-background" *ngIf="addToWhitelist"></div>
     <div class="overlay-message-popup-add" *ngIf="addToWhitelist">
-        <div class="addingToWhitelist width">
-            <div *ngIf="selectedWhitelist() === 'phone'">
+        <div class="addingToWhitelist align-self-center width">
+            <div *ngIf="this.StorageProvider.getKey('Whitelist').slice(0,1) === '1'">
                 <label> {{ 'CNF.phone_whitelist_1' | translate }} </label>
                 <label> {{ 'CNF.phone_whitelist_2' | translate }} </label>
             </div>
-            <div *ngIf="selectedWhitelist() === 'email'">
+            <div *ngIf="this.StorageProvider.getKey('Whitelist').slice(0,1) === '0'">
                 <label> {{ 'CNF.email_whitelist_1' | translate }} </label>
                 <label> {{ 'CNF.email_whitelist_2' | translate }} </label>
             </div>
@@ -83,7 +85,7 @@
 <div class="overlay-message" *ngIf="confirmDelete">
     <div class="overlay-message-background" *ngIf="confirmDelete"></div>
     <div class="overlay-message-popup-add" *ngIf="confirmDelete">
-        <div class="confirmingDelete width">
+        <div class="confirmingDelete width align-self-center">
             <label> Are you sure you want to delete the whitelist? </label>
             <div class="d-flex flex-column align-items-center">
                 <button class="btn btn-success w-50 cancelButton" (click)="deleteWhitelist(); confirmDelete = false;">{{
@@ -391,8 +393,7 @@
             </div>
         </div>
 
-        <div class="container"
-            *ngIf="accessGranted && !accessDenied && overlayClosed && showAm">
+        <div class="container" *ngIf="accessGranted && !accessDenied && overlayClosed && showAm">
             <div class="content">
                 <div
                     class="row content-div row d-flex flex-column flex-sm-column flex-md-row flex-lg-row text-center align-items-stretch">
@@ -470,8 +471,7 @@
             </div>
         </div>
 
-        <div class="container"
-            *ngIf="accessGranted && !accessDenied && overlayClosed && showRelays">
+        <div class="container" *ngIf="accessGranted && !accessDenied && overlayClosed && showRelays">
             <div class="content">
                 <div
                     class="row content-div row d-flex flex-column flex-sm-column flex-md-row flex-lg-row text-center align-items-stretch">
@@ -483,29 +483,35 @@
                                     {{ 'CNF.refresh' | translate }}
                                 </button>
                             </div>
-                            <div class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list w-100">
-                                <p *ngIf="this.relayDataSource.filteredData.length < 1" class="align-self-center"> {{ 'CNF.no_relays_found' | translate }} 
+                            <div
+                                class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list w-100">
+                                <p *ngIf="this.relayDataSource.filteredData.length < 1" class="align-self-center"> {{
+                                    'CNF.no_relays_found' | translate }}
                                 </p>
-                                <table mat-table [dataSource]="relayDataSource" *ngIf="this.relayDataSource.filteredData.length > 0">
+                                <table mat-table [dataSource]="relayDataSource"
+                                    *ngIf="this.relayDataSource.filteredData.length > 0">
 
                                     <ng-container matColumnDef="name">
                                         <th mat-header-cell *matHeaderCellDef> {{ 'CNF.relay_name' |
                                             translate }} </th>
-                                        <td mat-cell *matCellDef="let relay; let i = index" class="text-left"> {{ relay.product }}</td>
+                                        <td mat-cell *matCellDef="let relay; let i = index" class="text-left"> {{
+                                            relay.product }}</td>
                                     </ng-container>
 
                                     <ng-container matColumnDef="slot">
                                         <th mat-header-cell *matHeaderCellDef> {{ 'CNF.relay_slot' |
                                             translate }} </th>
-                                        <td mat-cell *matCellDef="let relay" class="text-left"> 
-                                            <input type="number" [(ngModel)]="openDoorValue" (click)="storeData('openDoorValue',openDoorValue)" min="0" name="relay slot">
+                                        <td mat-cell *matCellDef="let relay" class="text-left">
+                                            <input type="number" [(ngModel)]="openDoorValue"
+                                                (click)="storeData('openDoorValue',openDoorValue)" min="0"
+                                                name="relay slot">
                                         </td>
                                     </ng-container>
 
                                     <ng-container matColumnDef="open">
                                         <th mat-header-cell *matHeaderCellDef> {{ 'CNF.relay_slot' |
                                             translate }} </th>
-                                        <td mat-cell *matCellDef="let relay" class="text-left"> 
+                                        <td mat-cell *matCellDef="let relay" class="text-left">
                                             <button class="btn btn-success w-10 " (click)="openDoor(openDoorValue)">
                                                 {{ 'CNF.open' | translate }}{{ openDoorValue }}
                                             </button>
@@ -522,8 +528,7 @@
             </div>
         </div>
 
-        <div class="container"
-            *ngIf="accessGranted && !accessDenied && overlayClosed && showWhitelist">
+        <div class="container" *ngIf="accessGranted && !accessDenied && overlayClosed && showWhitelist">
             <div class="content">
                 <div
                     class="row content-div row d-flex flex-column flex-sm-column flex-md-row flex-lg-row text-center align-items-center">
@@ -532,16 +537,16 @@
                             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
                                 <h6 class="m-0 font-weight-bold text-primary">{{ 'CNF.whitelist' | translate }} </h6>
                                 <button class="btn btn-success w-10 right"
-                                    *ngIf="existsData('WhitelistEnabled') && existsData('selectedWhitelist')"
+                                    *ngIf="this.StorageProvider.getKey('Whitelist').slice(2,3) === '1'"
                                     (click)="addToWhitelist = true;">{{ 'CNF.add_whitelist' |
                                     translate }}
                                 </button>
-                                <button class="btn btn-danger w-10 left" *ngIf="existsData('selectedWhitelist')"
+                                <button class="btn btn-danger w-10 left" *ngIf="this.StorageProvider.getKey('Whitelist').slice(3,4) === '1'"
                                     (click)="confirmDelete = true;">{{ 'CNF.delete' | translate }}
                                 </button>
                             </div>
                             <div class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list"
-                                *ngIf="!existsData('selectedWhitelist')">
+                                *ngIf="this.StorageProvider.getKey('Whitelist') === ''">
                                 <label class="attribute-options">
                                     <input type="checkbox" name="choice" [(ngModel)]="emailWhitelist"
                                         (click)="phoneWhitelist = false; emailWhitelist = true;">
@@ -554,36 +559,53 @@
                                 </label>
                                 <button class="btn btn-success createButton"
                                     *ngIf="phoneWhitelist === true || emailWhitelist === true;"
-                                    (click)="makeWhitelist();">{{ 'CNF.create' |
+                                    (click)="setWhitelistCredential();">{{ 'CNF.continue' |
                                     translate }}</button>
                             </div>
+                            <div class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list"
+                            *ngIf="this.StorageProvider.getKey('Whitelist').slice(0,1) != '' && this.StorageProvider.getKey('Whitelist').slice(3,4) === '0'">
+
+                            <label class="attribute-options">
+                                <input type="checkbox" [(ngModel)]="enableBiometrics">
+                                {{ 'ATTRIBUTES.BIOMETRICS.biometrics' | translate }}
+                            </label>
+
+                            <button class="btn btn-success createButton"
+                                (click)="makeWhitelist();">{{ 'CNF.create' |
+                                translate }}</button>
+                            </div>  
+
                             <div class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center"
-                                *ngIf="existsData('selectedWhitelist')">
+                                *ngIf="this.StorageProvider.getKey('Whitelist').slice(3,4) === '1'">
                                 <label class="status align-self-center">
-                                    <ui-switch [checked]="existsData('WhitelistEnabled') ? true : false"
+                                    <ui-switch #test1 [checked]="this.StorageProvider.getKey('Whitelist').slice(2,3) === '1' ? true : false"
                                         (valueChange)="updateWhitelistEnabled(); setPaginator('whitelist')"
                                         uncheckedLabel="{{ 'CNF.disabled' | translate }}"
                                         checkedLabel="{{ 'CNF.enabled' | translate }}"></ui-switch>
                                 </label>
                                 <table mat-table [dataSource]="whitelistDataSource"
-                                    *ngIf="existsData('WhitelistEnabled') && whitelist.length > 0">
-
-                                    <ng-container matColumnDef="number">
-                                        <th mat-header-cell *matHeaderCellDef class="set-width"> # </th>
-                                        <td mat-cell *matCellDef="let credential; let i = index" class="text-left"> {{ i
-                                            + 1 }} </td>
-                                    </ng-container>
+                                    *ngIf="this.StorageProvider.getKey('Whitelist').slice(2,3) === '1' && whitelist.length > 0">
 
                                     <ng-container matColumnDef="credential">
-                                        <th mat-header-cell *matHeaderCellDef class="set-width"> {{ 'CNF.linked_credential' | translate }} </th>
-                                        <td mat-cell *matCellDef="let credential; let i = index" class="text-left"> {{ credential }} </td>
+                                        <th mat-header-cell *matHeaderCellDef class="set-width"> {{
+                                            'CNF.linked_credential' | translate }} </th>
+                                        <td mat-cell *matCellDef="let whitelisted; let i = index" class="text-left"> {{
+                                            whitelisted.credential }} </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="biometrics">
+                                        <th mat-header-cell *matHeaderCellDef class="set-width"> {{ 'CNF.has_biometrics'
+                                            | translate }} </th>
+                                        <td mat-cell *matCellDef="let whitelisted; let i = index" class="text-left">
+                                            {{'CNF.biometrics' | translate:{ type: whitelisted.hasBiometrics } }}
+                                         </td>
                                     </ng-container>
 
                                     <ng-container matColumnDef="remove">
                                         <th mat-header-cell *matHeaderCellDef
                                             class="padding-left-remove-column remove-right-padding"> {{ 'CNF.remove' |
                                             translate }} </th>
-                                        <td mat-cell *matCellDef="let credential; let i = index"
+                                        <td mat-cell *matCellDef="let whitelisted; let i = index"
                                             class="remove-right-padding"> <button
                                                 class="btn btn-danger w-25 margin-left-remove-column"
                                                 (click)="deleteFromList(2, i)">{{ 'CNF.remove' | translate }}</button>
@@ -594,7 +616,7 @@
                                     <tr mat-row *matRowDef="let row; columns: whitelistDisplayedColumns;"></tr>
                                 </table>
                                 <mat-paginator [pageSizeOptions]="[3]"
-                                    [hidden]="!existsData('WhitelistEnabled') || whitelist.length < 1"
+                                    [hidden]="this.StorageProvider.getKey('Whitelist').slice(2,3) != '1' || whitelist.length < 1"
                                     showFirstLastButtons></mat-paginator>
                             </div>
                         </div>
