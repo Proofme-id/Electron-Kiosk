@@ -7,14 +7,8 @@ import { BaseComponent } from "../../shared/components";
 import { AppStateFacade } from "../../state/app/app.facade";
 import { StorageProvider } from '../../providers/storage-provider.service'
 import { Router } from '@angular/router';
-// import '@tensorflow/tfjs-node';
-// import * as canvas from 'canvas';
+import * as log from "electron-log";
 import * as faceapi from "face-api.js";
-// const faceapi = require("face-api.js");
-// let faceapi: any = require("face-api.js");
-const log = window['require']('electron-log')
-// const { Canvas, Image, ImageData } = canvas
-// faceapi.env.monkeyPatch({ Canvas, Image, ImageData } as any)
 
 @Component({
   selector: 'app-am',
@@ -25,6 +19,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   validCredentialObj: IValidatedCredentials | IRequestedCredentialsCheckResult = null;
   requestedData: IRequestedCredentials = this.requestData();
   @ViewChild("qrCodeCanvas")
+
   @ViewChild('videoElement') videoElement: any;
 
   qrCodeCanvas: ElementRef;
@@ -73,13 +68,21 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     this.storeRightTrustedAuthorities();
     this.setupWebRtc('regular');
     this.setupWebRtc('email');
-    // this.startCamera();
+    this.startCamera();
   }
 
   async ngAfterViewInit() {
-    await faceapi.loadSsdMobilenetv1Model("/assets/facemodels");
-    await faceapi.loadFaceLandmarkModel("/assets/facemodels");
-    await faceapi.loadFaceRecognitionModel("/assets/facemodels");
+    await faceapi.loadSsdMobilenetv1Model("/assets/models");
+    await faceapi.loadFaceLandmarkModel("/assets/models");
+    await faceapi.loadFaceRecognitionModel("/assets/models");
+    faceapi.env.monkeyPatch({
+      Canvas: HTMLCanvasElement,
+      Image: HTMLImageElement,
+      ImageData: ImageData,
+      Video: HTMLVideoElement,
+      createCanvasElement: () => document.createElement('canvas'),
+      createImageElement: () => document.createElement('img')
+    })
   }
 
   startCamera(): void {
@@ -102,14 +105,11 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     browser.mediaDevices.getUserMedia(config).then(stream => {
       this.video = this.videoElement.nativeElement;
       this.video.srcObject = stream;
-      this.video.play();
-      this.video.addEventListener("play", () => {
-        setInterval(async () => {
-
-          console.log(await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor());
-
-        }, 1000)
-      })
+      this.video.play().then(() => {
+          setInterval(async () => {
+            console.log(await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor());
+          }, 1000)
+      });
     });
   }
 

@@ -169,6 +169,7 @@
     "node": ">=10.13.0"
   },
   "browser": {
+    "fs": false,
     "crypto": false,
     "http": false,
     "https": false,
