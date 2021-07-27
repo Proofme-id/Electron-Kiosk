@@ -1,7 +1,7 @@
 import { Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
 import { AppStateFacade } from '../../state/app/app.facade';
 import * as QRCode from 'qrcode';
-import { IRequestedCredentials, IRequestedCredentialsCheckResult, IValidatedCredentials, ProofmeUtilsProvider, WebRtcProvider } from "@proofmeid/webrtc-web";
+import { IRequestedCredentialKey, IRequestedCredentials, IRequestedCredentialsCheckResult, IValidatedCredentials, ProofmeUtilsProvider, WebRtcProvider } from "@proofmeid/webrtc-web";
 import { filter, skip, takeUntil } from "rxjs/operators";
 import { BaseComponent } from "../../shared/components";
 import { StorageProvider } from '../../providers/storage-provider.service'
@@ -12,6 +12,7 @@ import { marker as _ } from "@biesbjerg/ngx-translate-extract-marker";
 import { Router } from '@angular/router';
 import { RelayProvider } from '../../providers/relay-provider.service';
 import { Device } from 'node-hid';
+import * as moment from 'moment';
 
 var logLines: logInfo[] = [];
 
@@ -41,24 +42,16 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   qrCodeCanvasAdminRecovery: ElementRef;
   @ViewChild("qrCodeCanvasAddAdmin")
   qrCodeCanvasAddAdmin: ElementRef;
-  requestedData: IRequestedCredentials = {
-    by: "Kiosk",
-    description: "Access controle",
-    credentials: [{
-      key: "EMAIL",
-      required: true,
-      expectedValue: null,
-      provider: ['EMAIL'],
-    }]
-  };
+  requestedData: IRequestedCredentials
   signalingUrl = "wss://auth.proofme.id"
   web3Url = "https://api.didux.network/";
   validCredentialObj: IValidatedCredentials | IRequestedCredentialsCheckResult = null;
   trustedAuthorities = ['0xa6De718CF5031363B40d2756f496E47abBab1515', '0x708686336db6A465C1161FD716a1d7dc507d1d17'] // ProofME production environment & ProofME Demo Environment
-  websocketDisconnected = false;
-  accessGranted = false;
-  accessDenied = false;
-  overlayClosed = false;
+  websocketDisconnected: boolean = false;
+  accessGranted: boolean = true;
+  accessDenied: boolean = false;
+  overlayClosed: boolean = true;
+  dateToday: string = (moment()).format('YYYY-MM-DD');
   country = (this.translateService.currentLang === "en") ? "us" : this.translateService.currentLang;
   public isLanguageCollapsed = true;
   adminRecovery: boolean = false;
@@ -66,7 +59,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   showRecoveryQR: boolean = false;
   adminRecoveryCompleted: boolean = false;
   adminRecovered: boolean = false;
-  admins: any = this.StorageProvider.getKey('AdminInfo')
+  admins: any = this.StorageProvider.hasKey('AdminInfo') ? this.StorageProvider.getKey('AdminInfo') : []
   whitelist = this.StorageProvider.getKey('whitelistedUsers')
   addToWhitelist: boolean = false;
   showAddAdminQR: boolean = false;
@@ -103,7 +96,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   adminDataSource = new MatTableDataSource<string>(this.admins);
   relayDataSource = new MatTableDataSource<Device>(this.relayProvider.searchRelays());
   showLogsWelcome: boolean;
-  adminDisplayedColumns: string[] = (this.admins.length > 1 ? ['email', 'remove'] : ['email']);
+  adminDisplayedColumns: string[] = ['credential', 'remove'];
   whitelistDataSource = new MatTableDataSource<string>(this.whitelist);
   enableBiometrics: boolean = this.StorageProvider.hasKey('Whitelist') ? (this.StorageProvider.getKey('Whitelist').slice(1,2) === "1") ? true : false : false
   whitelistDisplayedColumns: string[] = this.enableBiometrics === true ? ['credential', 'biometrics', 'remove'] : ['credential','remove']
@@ -112,6 +105,11 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   showTutorialStep: number;
   showRelays: boolean = false;
   openDoorValue: number = (this.StorageProvider.hasKey('openDoorValue')) ? this.StorageProvider.getKey('openDoorValue') : 1;
+  confirmAdminDelete: boolean  = false;
+  adminPhoneCredentials: boolean = false;
+  adminEmailCredentials: boolean = false;
+  confirmDataDelete: boolean = false;
+  confirmWhitelistDelete: boolean = false;
 
   constructor(
     private router: Router,
@@ -177,7 +175,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   storeData(key: string, value?: any): void {
-    this.StorageProvider.setKey(key, (value) ? value : 'true');
+    this.StorageProvider.setKey(key, (value) ? value : true);
   }
 
   deleteData(key: string): void {
@@ -210,8 +208,10 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     }
   }
 
-  ngOnInit(): void {
-    this.StorageProvider.hasKey('Whitelist') ? null : this.StorageProvider.setKey('Whitelist','')
+  ngOnInit(): void {  
+    this.fillAvailableLogs()
+    this.StorageProvider.hasKey('Whitelist') ? null : this.StorageProvider.setKey('Whitelist', '')
+    this.getCorrectCredentials();
     if (!this.StorageProvider.hasKey('firstStartupCompleted')) {
       this.ngZone.run(() => {
         this.accessGranted = true;
@@ -220,6 +220,13 @@ export class ConfigComponent extends BaseComponent implements OnInit {
         this.showTutorialStep = 2;
       });
     } 
+    else if (this.admins.length < 1) {
+      this.ngZone.run(() => {
+        this.accessGranted = true;
+        this.accessDenied = false;
+        this.overlayClosed = true;
+      });
+    }
     
     this.log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.getCorrectValues();
@@ -282,27 +289,58 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     return false;
   }
 
-  fillAvailableLogs(): void {
+  fillAvailableLogs(): boolean {
     this.availableLogs = [];
     this.fs.readdir(this.logsPath, (err, fileName) => {
       fileName.forEach(FN => {
         this.availableLogs.push(FN.substring(0, FN.length - 4));
       });
     });
+    return true;
   }
 
-  setRequestedData(): void {
-    this.requestedData =
-    {
-      by: "Kiosk",
-      description: "Access controle",
-      credentials: [{
-        key: "EMAIL",
-        required: true,
-        expectedValue: null,
-        provider: ['EMAIL'],
-      }]
-    };
+  setAdminCredential(): void {
+    if (this.adminPhoneCredentials) {
+     this.StorageProvider.setKey('selectedAdminCredential', 'phone')
+    } 
+    else if (this.adminEmailCredentials) {
+     this.StorageProvider.setKey('selectedAdminCredential', 'email')
+    }
+  }
+   
+  getCorrectCredentials(): void {
+    if (this.StorageProvider.getKey("selectedAdminCredential") === "phone") {
+      this.requestedData =
+      {
+        by: "Kiosk",
+        description: "Access controle",
+        credentials: [{
+          key: "PHONE_NUMBER",
+          required: true,
+          expectedValue: 'true',
+          provider: 'PHONE_NUMBER',
+        }]
+      }
+
+    } else if (this.StorageProvider.getKey("selectedAdminCredential") === "email") {
+      this.requestedData =
+      {
+        by: "Kiosk",
+        description: "Access controle",
+        credentials: [{
+          key: "EMAIL",
+          required: true,
+          expectedValue: 'true',
+          provider: 'EMAIL',
+        }]
+      }
+    }
+  }
+
+  deleteAdminList(): void {
+    this.admins = [];
+    this.StorageProvider.deleteKey('AdminInfo')
+    this.StorageProvider.deleteKey('selectedAdminCredential')
   }
 
   deleteWhitelist(): void {
@@ -447,26 +485,26 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   selectedWhitelist(): string {
-    if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "0") { // 0(000). Email
+    if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "0") { 
       return "email"
-    } else if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "1") { // 1(000). Phone
+    } else if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "1") { 
       return "phone"
     }
   }
 
   setWhitelistCredential() : void {
     if (this.emailWhitelist === true) {
-      this.StorageProvider.setKey('Whitelist', "0000") // 0000 email, no biometrics, not enabled, not created
+      this.StorageProvider.setKey('Whitelist', "0000") 
     } else if (this.phoneWhitelist === true) {
-      this.StorageProvider.setKey('Whitelist', "1000") // 1000 Phone, no biometrics, not enabled, not created
+      this.StorageProvider.setKey('Whitelist', "1000") 
     }
   }
 
   makeWhitelist(): void {
     if (this.enableBiometrics === true) {
-      this.StorageProvider.setKey('Whitelist', this.StorageProvider.getKey('Whitelist').slice(0,1) + "111") //1111 Phone, Biometrics, enabled, created
+      this.StorageProvider.setKey('Whitelist', this.StorageProvider.getKey('Whitelist').slice(0,1) + "111") 
     } else {
-      this.StorageProvider.setKey('Whitelist', this.StorageProvider.getKey('Whitelist').slice(0,1) + "011") //0011 Email, no biometrics, enabled, created
+      this.StorageProvider.setKey('Whitelist', this.StorageProvider.getKey('Whitelist').slice(0,1) + "011") 
     }
   }
 
@@ -480,7 +518,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
           })
         this.ngZone.run(() => {
           this.whitelistDataSource = new MatTableDataSource<string>(this.whitelist);
-          this.whitelistDisplayedColumns = (this.whitelist.length > 1 ? ['credential', 'biometrics', 'remove'] : ['credential', 'biometrics']);
+          this.whitelistDisplayedColumns = ['credential', 'biometrics', 'remove'];
           this.whitelistDataSource.paginator = this.paginator;
         })
       });
@@ -521,10 +559,12 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       console.error(this.validCredentialObj);
     }
     else if (this.addAdmin === true && this.adminExistsAndIsCorrect(this.admins, data) === 3) {
-      this.admins.push({ did: data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10), email: data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, credentialobject: data.credentialObject })
-      this.adminDisplayedColumns = (this.admins.length > 1 ? ['email', 'remove'] : ['email']);
+      this.pushRightCredental(data);
+      this.adminDisplayedColumns = ['credential', 'remove'];
       this.adminDataSource.paginator = this.paginator;
       this.StorageProvider.setKey('AdminInfo', this.admins)
+      this.adminDataSource = this.admins
+      this.setPaginator('admin')
       this.ngZone.run(() => {
         this.addAdmin = false;
         this.overlayClosed = true;
@@ -542,7 +582,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       }, 3500);
     }
     else if (this.adminExistsAndIsCorrect(this.admins, data) === 1 && this.adminRecovery === false) {
-      this.log.info('2 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
+      this.logRightCredential(data, '2 ');
       console.log("Success!!!")
       this.ngZone.run(() => {
         this.accessDenied = false;
@@ -555,14 +595,14 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       }, 1500);
     }
     else if (this.adminExistsAndIsCorrect(this.admins, data) === 2 && this.adminRecovery === false) {
-      this.log.info('3 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
+      this.logRightCredential(data, '3 ');
       this.ngZone.run(() => {
         this.offerAdminRecovery = true;
         this.overlayClosed = false;
       });
     }
     else if (this.adminExistsAndIsCorrect(this.admins, data) === 2 && this.adminRecovery === true) {
-      this.log.info('4 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
+      this.logRightCredential(data, '4 ');
       this.ngZone.run(() => {
         this.accessGranted = true;
         this.accessDenied = false;
@@ -576,7 +616,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       });
     }
     else {
-      this.log.info('5 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
+      this.logRightCredential(data, '5 ')
       this.ngZone.run(() => {
         this.accessDenied = true;
         this.accessGranted = false;
@@ -588,6 +628,27 @@ export class ConfigComponent extends BaseComponent implements OnInit {
           this.accessDenied = false;
         });
       }, 1500);
+    }
+  }
+
+  deleteAllStoredData(): void {
+    this.StorageProvider.deleteAllStored();
+    this.router.navigate(['/home'])
+  }
+  
+  logRightCredential(data: any, logType: string) {
+      if (this.StorageProvider.getKey('selectedAdminCredential') === "email") {
+        this.log.info(logType + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
+      } else if (this.StorageProvider.getKey('selectedAdminCredential') === "phone") {
+        this.log.info(logType + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
+      }
+  }
+
+  pushRightCredental(data: any) {
+    if (this.StorageProvider.getKey("selectedAdminCredential") === "phone") {
+      this.admins.push({ did: data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.id.substring(10), credential: data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, credentialobject: data.credentialObject })
+    } else if (this.StorageProvider.getKey("selectedAdminCredential") === "email") {
+      this.admins.push({ did: data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10), credential: data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, credentialobject: data.credentialObject })    
     }
   }
 
@@ -609,12 +670,12 @@ export class ConfigComponent extends BaseComponent implements OnInit {
 
   whitelistedExistsAndIsCorrect(whitelist: any): number {
     for (let whitelisted of whitelist) {
-      if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "1") { // 1***. Phone
+      if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "1") { 
         if (whitelisted.credential === this.input) {
           return 1;
         }
       }
-      else if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "0") { // 0***. Email
+      else if (this.StorageProvider.getKey('Whitelist').slice(0,1) === "0") {
         if (whitelisted.credential === this.input) {
           return 1;
         }
@@ -624,24 +685,48 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   adminExistsAndIsCorrect(admins: any, data: any): number {
-    for (let admin of admins) {
-      if (admin.email === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value && admin.did === data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10)) {
-        return 1;
+    if (this.StorageProvider.getKey('selectedAdminCredential') === "email") {
+      for (let admin of admins) {
+        if (admin.credential === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value && admin.did === data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10)) {
+          return 1;
+        }
+        else if (this.accessGranted && admin.credential === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
+          return 1;
+        }
+        else if (admin.credential === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
+          return 2;
+        }
       }
-      else if (this.accessGranted && admin.email === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
-        return 1;
-      }
-      else if (admin.email === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
-        return 2;
+    } else if (this.StorageProvider.getKey('selectedAdminCredential') === "phone") {
+      for (let admin of admins) {
+        if (admin.credential === data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value && admin.did === data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.id.substring(10)) {
+          return 1;
+        }
+        else if (this.accessGranted && admin.credential === data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value) {
+          return 1;
+        }
+        else if (admin.credential === data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value) {
+          return 2;
+        }
       }
     }
     return 3;
   }
 
   recoverAdmin(admins: any, data: any): void {
-    for (let i = 0; i < admins.length; i++) {
-      if (admins[i].credentialobject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
-        admins[i].did = data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10)
+    if (this.StorageProvider.getKey('selectedAdminCredential') === "email") {
+      for (let i = 0; i < admins.length; i++) {
+        if (admins[i].credentialobject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
+          admins[i].did = data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10)
+          admins[i].credentialobject = data.credentialObject;
+        }
+      }
+    } else if (this.StorageProvider.getKey('selectedAdminCredential') === "phone") {
+      for (let i = 0; i < admins.length; i++) {
+        if (admins[i].credentialobject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value === data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value) {
+          admins[i].did = data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.id.substring(10)
+          admins[i].credentialobject = data.credentialObject;
+        }
       }
     }
     this.StorageProvider.setKey('AdminInfo', admins)
@@ -652,14 +737,14 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       this.admins.splice(number, 1)
       this.StorageProvider.setKey('AdminInfo', this.admins)
       this.ngZone.run(() => {   
-        this.adminDisplayedColumns = (this.admins.length > 1 ? ['email', 'remove'] : ['email']);
+        this.adminDisplayedColumns = ['credential','remove'];
         this.adminDataSource.paginator = this.paginator;
       })
     } else if (list === 2) {
       this.whitelist.splice(number, 1)
       this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
       this.ngZone.run(() => {   
-        this.whitelistDisplayedColumns = (this.whitelist.length > 1 ? ['credential', 'biometrics' ,'remove'] : ['credential', 'biometrics']);
+        this.whitelistDisplayedColumns = ['credential', 'biometrics' ,'remove'];
         this.whitelistDataSource.paginator = this.paginator;
       })
     }

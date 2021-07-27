@@ -1,5 +1,5 @@
 import { Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
-import { ICredential, IRequestedCredentials, IRequestedCredentialsCheckResult, IValidatedCredentials, ProofmeUtilsProvider, signCredentialObject, WebRtcProvider } from '@proofmeid/webrtc-web';
+import { ICredential, IRequestedCredentialKey, IRequestedCredentials, IRequestedCredentialsCheckResult, IValidatedCredentials, ProofmeUtilsProvider, signCredentialObject, WebRtcProvider } from '@proofmeid/webrtc-web';
 import { filter, skip, takeUntil } from 'rxjs/operators';
 import { BaseComponent } from "../../shared/components";
 import { AppStateFacade } from '../../state/app/app.facade';
@@ -21,12 +21,7 @@ export class HomeComponent extends BaseComponent implements OnInit {
   requestedData: IRequestedCredentials = {
     by: "ProofMe Id Demo",
     description: "Access controle",
-    credentials: [{
-      key: "EMAIL",
-      required: true,
-      expectedValue: null,
-      provider: 'EMAIL'
-    }]
+    credentials: []
   }
 
   country = (this.translateService.currentLang === "en") ? "us" : this.translateService.currentLang;
@@ -45,6 +40,8 @@ export class HomeComponent extends BaseComponent implements OnInit {
     "gb": "English",
     "nl": "Nederlands"
   }
+  adminPhoneCredentials: boolean = false;
+  adminEmailCredentials: boolean = false;
 
   issuer = {
     did: '0x473bCB57aEf23F834D51e6441538E373BaeA1d5a',
@@ -66,10 +63,13 @@ export class HomeComponent extends BaseComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.existsData('selectedAdminCredential')) {
+      this.getCorrectCredentials();
+      this.setupWebRtc();
+    }
     if (this.existsData('firstStartupCompleted')) {
       this.router.navigate(['/am'])
     }
-    this.setupWebRtc();
   }
 
   constructor(
@@ -96,7 +96,8 @@ export class HomeComponent extends BaseComponent implements OnInit {
     } else {
       this.ngZone.run(() => {
         this.StorageProvider.setKey('whitelistedUsers', [])
-        this.StorageProvider.setKey('AdminInfo', [{ did: data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10), email: data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, credentialobject: data.credentialObject }])
+        //Changed to a function so that it is easier to store with multiple credentials.
+        this.storeRightData(data);
         let request: IRequestedCredentials = {
           by: "Kiosk",
           description: "Access controle",
@@ -172,8 +173,67 @@ export class HomeComponent extends BaseComponent implements OnInit {
     }
   }
 
+
+  //Stores the right data, depending on if Phone or Email is selected as admin credential
+  //data: The data the user shares via the app.
+  storeRightData(data: any) {
+    if (this.StorageProvider.getKey('selectedAdminCredential') === "email") {
+      this.StorageProvider.setKey('AdminInfo', [{ did: data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10), credential: data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, credentialobject: data.credentialObject }])
+    } else if (this.StorageProvider.getKey('selectedAdminCredential') === "phone") {
+      this.StorageProvider.setKey('AdminInfo', [{ did: data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.id.substring(10), credential: data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, credentialobject: data.credentialObject }])
+    }
+  }
+
+  //Deletes the data with the given key
+  //key: The key of which the data will be deleted
+  deleteData(key: string) {
+    this.StorageProvider.deleteKey(key)
+  }
+
+  //Determines the correct credentials to ask using the stored data in the key selectedAdminCredential
+  getCorrectCredentials(): void {
+    if (this.StorageProvider.getKey("selectedAdminCredential") === "phone") {
+      this.requestedData.credentials = [{
+        key: "PHONE_NUMBER",
+        required: true,
+        expectedValue: 'true',
+        provider: 'PHONE_NUMBER',
+      }]
+    } else if (this.StorageProvider.getKey("selectedAdminCredential") === "email") {
+      this.requestedData.credentials = [{
+        key: "EMAIL",
+        required: true,
+        expectedValue: null,
+        provider: 'EMAIL'
+      }]
+    } 
+  }
+
+  // Checks if the data exists in the StorageProvider.
+  // Returns boolean value.
+  // Key: Name of the key that is used to store data in the StorageProvider
   existsData(key: string): boolean {
     return this.StorageProvider.hasKey(key);
+  }
+
+  // Stores the data in the StorageProvider.
+  // Key: Name of the key that is used to store data in the StorageProvider
+  // Value: Optional. If a value is given that value will be stored, otherwise it will be stored as true
+  storeData(key: string, value?: any): void {
+    this.StorageProvider.setKey(key, (value) ? value : true);
+  }
+
+  //Stores the right admin credential depending on whether phone or email is selected.
+  setAdminCredential(): void {
+   if (this.adminPhoneCredentials) {
+    this.StorageProvider.setKey('selectedAdminCredential', 'phone')
+   } 
+   else if (this.adminEmailCredentials) {
+    this.StorageProvider.setKey('selectedAdminCredential', 'email')
+   }
+   this.ngZone.run(() => {
+    this.getCorrectCredentials();
+   })
   }
   
   fillAttributes() {
@@ -184,7 +244,6 @@ export class HomeComponent extends BaseComponent implements OnInit {
         provider: 'CUSTOM'
       })));
     }
-
   }
 
   async refreshWebsocketDisconnect() {

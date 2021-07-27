@@ -8,7 +8,7 @@
 		"scan_code2": "ProofMe App.",
 		"success-message": "Welkom!",
 		"first_scan": "Welkom in de ProofMe.ID kiosk. Scan alstublieft de",
-		"first_scan2": "QR-Code om een admin te worden en de kiosk te configureren.",
+		"first_scan2": "QR-Code om een beheerder te worden en de kiosk te configureren.",
 		"first_scan3": "Eerste installatie",
 		"enroll": "Inschrijven"
 	},
@@ -37,12 +37,20 @@
 	},
 	"CNF": {
 		"MENU": {
+			"ADMINS_DESCRIPTION": "Ga naar de beheerders",
+			"AM_DESCRIPTION": "Ga naar de toegangs pagina",
+			"LOGS_DESCRIPTION": "Ga naar het logboek",
+			"SETTINGS_DESCRIPTION": "Ga naar de instellingen",
+			"WHITELIST_DESCRIPTION": "Ga naar de whitelist pagina",
+			"RELAYS_DESCRIPTION": "Ga naar de relays",
+			"DELETE_DESCRIPTION": "Reset",
 			"ADMINS": "Beheerders",
-			"AM": "Toegang",
+			"AM": "Toegangs pagina",
 			"LOGS": "Logboek",
 			"SETTINGS": "Instellingen",
-			"WHITELIST": "Whitelist",
-			"RELAYS": "Relays"
+			"WHITELIST": "Whitelist pagina",
+			"RELAYS": "Relays pagina",
+			"DELETE": "Reset"
 		},
 		"refresh": "Verversen",
 		"open": "Open: ",
@@ -57,7 +65,7 @@
 		"add_admin1": "Scan de QR-Code met de nieuwe beheerders",
 		"add_admin2": "Proofme.ID app om een nieuwe beheerder te worden",
 		"add_whitelist": "Gebruiker toevoegen",
-		"admin-recovered": "Uw admin rechten zijn opnieuw gelinkt",
+		"admin-recovered": "Uw beheerder rechten zijn opnieuw gelinkt",
 		"admins": "Dit zijn de Beheerders.",
 		"allow_demo": "Demo attributen toestaan?",
 		"allowed": "Toegestaan",
@@ -89,8 +97,8 @@
 		"recover": "Herstel",
 		"remove": "Verwijderen",
 		"scan_code": "Scan de QR-Code met de ProofMe App om",
-		"scan_code2": "te bewijzen dat u een Administrator bent.",
-		"scan_recover": "Om uw admin rechten terug te krijgen.",
+		"scan_code2": "te bewijzen dat u een beheerder bent.",
+		"scan_recover": "Om uw beheerder rechten terug te krijgen.",
 		"settings": "Dit zijn de algemene instellingen.",
 		"warn": "",
 		"welcome_message1": "Welkom in het configuratiescherm.",
@@ -98,10 +106,18 @@
 		"which_credentials": "Welke gegevens wilt u toestaan?",
 		"whitelist": "Whitelist",
 		"type": "{type, select, warn{WAARSCHUWING} info{INFO} other{ANDER}}",
-		"message": "{type, select, 1{Gebruiker {user} heeft geen toegang gekregen vanwege invalide gegevens.} 2{Gebruiker {user} heeft ingelogd in de configuratie.} 3{Gebruiker {user} is aangeboden om zijn of haar admin gegevens te herstellen.} 4{Gebruiker {user} heeft zijn of haar admin gegevens hersteld.} 5{Gebruiker {user} heeft geen toegang gekregen tot de configuratie.} 6{Gebruiker {user} heeft toegang gekregen met een ingeschakelde whitelist. } 7{Gebruiker {user} heeft geen toegang gekregen met een ingeschakelde whitelist. } other{Error. Related to {user}}}",
+		"message": "{type, select, 1{Gebruiker {user} heeft geen toegang gekregen vanwege invalide gegevens.} 2{Gebruiker {user} heeft ingelogd in de configuratie.} 3{Gebruiker {user} is aangeboden om zijn of haar beheerder gegevens te herstellen.} 4{Gebruiker {user} heeft zijn of haar beheerder gegevens hersteld.} 5{Gebruiker {user} heeft geen toegang gekregen tot de configuratie.} 6{Gebruiker {user} heeft toegang gekregen met een ingeschakelde whitelist. } 7{Gebruiker {user} heeft geen toegang gekregen met een ingeschakelde whitelist. } other{Error. Related to {user}}}",
 		"pick_date": "Kies een datum.",
 		"has_biometrics": "Biometrie",
-		"biometrics": "{type, select, Enabled{Biometrie gevonden} Disabled{Geen biometrie gevonden} other{ERROR}}"
+		"biometrics": "{type, select, Enabled{Biometrie gevonden} Disabled{Geen biometrie gevonden} other{ERROR}}",
+		"confirm_whitelist_delete": "Weet u zeker dat u de whitelist wilt verwijderen?",
+		"confirm_admins_delete": "Weet u zeker dat u de beheerder lijst wilt verwijderen?",
+		"no_admin_found": "Er zijn geen beheerders gevonden.",
+		"please_add_admin": "Voeg alstublieft een beheerder toe voor u iets anders doet.",
+		"confirm_data_delete": "Weet u heel zeker dat u de applicatie wilt resetten?",
+		"confirm_data_delete2": "Door dit te doen verliest u alle data die opgeslagen staat in de applicatie.",
+		"back": "Terug", 
+		"completed_startup": "Gefeliciteerd! u hebt de eerste installatie voltooid."
 	},
 	"INSTRUCTION_OVERLAY": {
 		"message": "Volg de instructies in de app"
@@ -115,5 +131,8 @@
 		"HOME": {
 			"TITLE": "Home"
 		}
+	},
+	"HOME": {
+		"select_admin_credential": "Selecteer het beheerder gegeven dat u wilt gebruiken."
 	}
 }

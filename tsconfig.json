@@ -17,7 +17,27 @@
       "es2016",
       "es2015",
       "dom"
-    ]
+    ],
+    "paths": {
+      "vm": [
+        "./node_modules/vm-browserify/index.js"
+      ],
+      "crypto": [
+        "./node_modules/crypto-browserify"
+      ],
+      "https": [
+        "./node_modules/https-browserify/index.js"
+      ],
+      "http": [
+        "./node_modules/http-browserify/index.js"
+      ],
+      "os": [
+        "./node_modules/os-browserify/main.js"
+      ],
+      "stream": [
+        "./node_modules/stream-browserify/index.js"
+      ]
+    }
   },
   "files": [
     "src/main.ts",

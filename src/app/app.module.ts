@@ -3,13 +3,15 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { NgxsModule } from "@ngxs/store";
-import { ProofmeUtilsProvider, WebRtcProvider } from "@proofmeid/webrtc-web/proofmeid-webrtc-web";
+import { ProofmeUtilsProvider, WebRtcProvider } from "@proofmeid/webrtc-web";
 import { AppConfig } from "../environments/environment";
 import { CoreModule } from './core/core.module';
 import { AmModule } from "./features/am/am.module";
 import { StorageProvider } from "./providers/storage-provider.service";
 import { RelayProvider } from "./providers/relay-provider.service";
 import { SharedModule } from './shared/shared.module';
+import { ToastrModule } from 'ngx-toastr';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { FontAwesomeModule, FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
@@ -18,7 +20,7 @@ import { AppRoutingModule } from './app-routing.module';
 // NG Translate
 import { TranslateModule, TranslateCompiler, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import {TranslateMessageFormatCompiler} from 'ngx-translate-messageformat-compiler';
+import { TranslateMessageFormatCompiler } from 'ngx-translate-messageformat-compiler';
 
 import { HomeModule } from './features/home/home.module';
 import { ConfigModule } from "./features/config/config.module";
@@ -34,6 +36,16 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
 @NgModule({
   declarations: [AppComponent],
   imports: [
+    BrowserAnimationsModule,
+    ToastrModule.forRoot({
+      timeOut: 2500,
+      autoDismiss: true,
+      maxOpened: 5,
+      positionClass: 'toast-bottom-right',
+      preventDuplicates: true,
+      resetTimeoutOnDuplicate: true,
+      easeTime: "300"
+    }),
     BrowserModule,
     FormsModule,
     HttpClientModule,
@@ -56,7 +68,7 @@ export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
       compiler: {
         provide: TranslateCompiler,
         useClass: TranslateMessageFormatCompiler
-    }
+      }
     }),
     AppStateModule
   ],

@@ -5,7 +5,7 @@
   <div class="content-div row" [hidden]="existsData('firstStartupCompleted')">
     <div class="col-xl-12 content-div mx-auto">
       <div class="card shadow mb-4 align-items-center">
-        <div class="card-body text-center">
+        <div class="card-body text-center" [hidden]="!existsData('selectedAdminCredential')">
           <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.first_scan3' | translate }}</p>
           <div class="logo relative py-3 d-flex flex-column align-items-center">
             <canvas #qrCodeCanvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''"></canvas>
@@ -13,19 +13,37 @@
           <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.first_scan' | translate }}</p>
           <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.first_scan2' | translate }}</p>
 
+          <button class="btn btn-danger createButton"
+              *ngIf="existsData('selectedAdminCredential')"
+              (click)="deleteData('selectedAdminCredential')">{{ 'CNF.back' |
+              translate }}
+          </button>
+        </div>
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center" *ngIf="!existsData('selectedAdminCredential')">
+          <h6 class="m-0 font-weight-bold text-primary">{{ 'HOME.select_admin_credential' | translate }} </h6>
+        </div>
+        <div class="card-body d-flex flex-column flex-sm-column flex-md-column flex-lg-column justify-content-center attribute-list" *ngIf="!existsData('selectedAdminCredential')">
+          <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.first_scan3' | translate }}</p>
+          <label class="attribute-options">
+              <input type="checkbox" name="choice" [(ngModel)]="adminEmailCredentials"
+                  (click)="adminPhoneCredentials = false; adminEmailCredentials = true;">
+              {{ 'ATTRIBUTES.EMAIL.email' | translate }}
+          </label>
+          <label class="attribute-options">
+              <input type="checkbox" name="choice" [(ngModel)]="adminPhoneCredentials"
+                  (click)="adminEmailCredentials = false; adminPhoneCredentials = true;">
+              {{ 'ATTRIBUTES.PHONE.phone' | translate }}
+          </label>
+          <button class="btn btn-success createButton"
+              *ngIf="adminPhoneCredentials || adminEmailCredentials"
+              (click)="setAdminCredential(); setupWebRtc(); ">{{ 'CNF.continue' |
+              translate }}
+          </button>
         </div>
         <ngx-flag-picker [customLabels]="customLabels" [selectedCountryCode]="selectedCountryCode"
           [countryCodes]="countryCodes" (changedCountryCode)="changeSelectedCountryCode($event)"></ngx-flag-picker>
       </div>
     </div>
   </div>
-
-  <div class="container" *ngIf="existsData('firstStartupCompleted')">
-    <h1 class="title">
-      {{ 'PAGES.HOME.TITLE' | translate }}
-    </h1>
-
-    <a routerLink="/config">{{ 'PAGES.GO_TO_CONFIG' | translate }}</a>
-    <a routerLink="/am">{{ 'PAGES.GO_TO_AM' | translate }}</a>
-  </div>
 </div>
+

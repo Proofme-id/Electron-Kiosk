@@ -37,14 +37,22 @@
 	},
 	"CNF": {
 		"MENU": {
-			"ADMINS": "Admins",
-			"AM": "Access",
-			"LOGS": "Logs",
-			"SETTINGS": "Settings",
-			"WHITELIST": "Whitelist",
-			"RELAYS": "Relays"
+			"ADMINS_DESCRIPTION": "Go to Administrators",
+			"AM_DESCRIPTION": "Go to the access page",
+			"LOGS_DESCRIPTION": "Go to the logs",
+			"SETTINGS_DESCRIPTION": "Go to the settings",
+			"WHITELIST_DESCRIPTION": "Go to the whitelist",
+			"RELAYS_DESCRIPTION": "Go to the relays",
+			"DELETE_DESCRIPTION": "Reset",
+			"ADMINS": "Administrators",
+			"AM": "Access overview",
+			"LOGS": "Logging overview",
+			"SETTINGS": "System settings",
+			"WHITELIST": "Whitelist settings",
+			"RELAYS": "Relay overview",
+			"DELETE": "Reset"
 		},
-		"refresh": "Verversen",
+		"refresh": "Refresh",
 		"open": "Open: ",
 		"relay_slot": "Relay Slot",
 		"relay_name": "Relay Name",
@@ -101,7 +109,14 @@
 		"pick_date": "Pick a date.",
 		"completed_startup": "Congratulations! You've completed the first time startup.",
 		"has_biometrics": "Biometrics",
-		"biometrics": "{type, select, Enabled{Biometrics found} Disabled{No biometrics found} other{ERROR}}"
+		"biometrics": "{type, select, Enabled{Biometrics found} Disabled{No biometrics found} other{ERROR}}",
+		"confirm_whitelist_delete": "Are you sure you want to delete the whitelist?",
+		"confirm_admins_delete": "Are you sure you want to delete the admin list?",
+		"no_admin_found": "No admin's were found.",
+		"please_add_admin": "Please add an admin before doing anything else.",
+		"confirm_data_delete": "Are you absolutely sure you want to reset the application?",
+		"confirm_data_delete2": "By doing this you will lose ALL stored data in the application.",
+		"back": "Back"
 	},
 	"INSTRUCTION_OVERLAY": {
 		"message": "Follow the instructions in the app"
@@ -115,5 +130,8 @@
 		"HOME": {
 			"TITLE": "App works !"
 		}
+	},
+	"HOME": {
+		"select_admin_credential": "Select the admin credential you wish to use."
 	}
 }

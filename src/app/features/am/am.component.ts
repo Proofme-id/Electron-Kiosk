@@ -1,4 +1,4 @@
-import { Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
 import { IRequestedCredentials, IRequestedCredentialsCheckResult, IValidatedCredentials, ProofmeUtilsProvider, WebRtcProvider } from "@proofmeid/webrtc-web";
 import * as QRCode from 'qrcode';
 import { filter, skip, takeUntil } from "rxjs/operators";
@@ -7,21 +7,30 @@ import { BaseComponent } from "../../shared/components";
 import { AppStateFacade } from "../../state/app/app.facade";
 import { StorageProvider } from '../../providers/storage-provider.service'
 import { Router } from '@angular/router';
+// import '@tensorflow/tfjs-node';
+// import * as canvas from 'canvas';
+import * as faceapi from "face-api.js";
+// const faceapi = require("face-api.js");
+// let faceapi: any = require("face-api.js");
 const log = window['require']('electron-log')
+// const { Canvas, Image, ImageData } = canvas
+// faceapi.env.monkeyPatch({ Canvas, Image, ImageData } as any)
 
 @Component({
   selector: 'app-am',
   templateUrl: './am.component.html',
   styleUrls: ['./am.component.scss']
 })
-export class AmComponent extends BaseComponent implements OnInit {
+export class AmComponent extends BaseComponent implements OnInit, AfterViewInit {
   validCredentialObj: IValidatedCredentials | IRequestedCredentialsCheckResult = null;
   requestedData: IRequestedCredentials = this.requestData();
   @ViewChild("qrCodeCanvas")
+  @ViewChild('videoElement') videoElement: any;
+
   qrCodeCanvas: ElementRef;
   date = new Date().toISOString()
   logsPath: string = process.env.APPDATA + '/proofmeid-kiosk/logs/' || (process.platform == 'darwin' ? process.env.HOME + '/Library/Logs/proofmeid-kiosk/' : process.env.HOME + "/.config/proofmeid-kiosk/logs/")
-  signalingUrl = "wss://auth.proofme.id"
+  signalingUrl = "wss://auth.proofme.id";
   web3Url = "https://api.didux.network/";
   trustedAuthorities = []
   websocketDisconnected = false;
@@ -36,6 +45,7 @@ export class AmComponent extends BaseComponent implements OnInit {
   qrCodeCanvasAddBiometrics: ElementRef;
   addBiometricsToWhitelisted: boolean = false;
   showBiometricsOverlay: boolean = false;
+  video: any;
 
   constructor(
     private router: Router,
@@ -62,7 +72,45 @@ export class AmComponent extends BaseComponent implements OnInit {
     log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.storeRightTrustedAuthorities();
     this.setupWebRtc('regular');
+    this.setupWebRtc('email');
+    // this.startCamera();
+  }
 
+  async ngAfterViewInit() {
+    await faceapi.loadSsdMobilenetv1Model("/assets/facemodels");
+    await faceapi.loadFaceLandmarkModel("/assets/facemodels");
+    await faceapi.loadFaceRecognitionModel("/assets/facemodels");
+  }
+
+  startCamera(): void {
+    this.initCamera({
+      width: { min: 360, ideal: 1024 },
+      height: { min: 360, ideal: 724 },
+      frameRate: { ideal: 30, max: 60 },
+      video: true, audio: false
+    });
+  }
+
+  initCamera(config: any) {
+    var browser = <any>navigator;
+
+    browser.getUserMedia = (browser.getUserMedia ||
+      browser.webkitGetUserMedia ||
+      browser.mozGetUserMedia ||
+      browser.msGetUserMedia);
+
+    browser.mediaDevices.getUserMedia(config).then(stream => {
+      this.video = this.videoElement.nativeElement;
+      this.video.srcObject = stream;
+      this.video.play();
+      this.video.addEventListener("play", () => {
+        setInterval(async () => {
+
+          console.log(await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor());
+
+        }, 1000)
+      })
+    });
   }
 
   openDoor(slot) {
@@ -177,7 +225,7 @@ export class AmComponent extends BaseComponent implements OnInit {
       credentials = this.StorageProvider.getKey("Credentials")
     }
 
-    if (type === 'biometrics' && this.StorageProvider.getKey('Whitelist').slice(0,1) === '0') {
+    if (type === 'biometrics' && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '0') {
       request = {
         by: "Kiosk",
         description: "Access controle",
@@ -197,7 +245,7 @@ export class AmComponent extends BaseComponent implements OnInit {
       return request;
     }
 
-    if (type === 'biometrics' && this.StorageProvider.getKey('Whitelist').slice(0,1) === '1') {
+    if (type === 'biometrics' && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '1') {
       request = {
         by: "Kiosk",
         description: "Access controle",
@@ -217,7 +265,7 @@ export class AmComponent extends BaseComponent implements OnInit {
       return request;
     }
 
-    if (credentials && this.StorageProvider.getKey('Whitelist').slice(2,3) === '0') {
+    if (credentials && (this.StorageProvider.getKey('Whitelist').slice(2, 3) === '0' || this.StorageProvider.getKey('Whitelist') === '')) {
       const allCredentials = [
         {
           key: "AIR_TICKET",
@@ -283,14 +331,14 @@ export class AmComponent extends BaseComponent implements OnInit {
           data: filteredMinRequired
         }
       };
-    } else if (this.StorageProvider.getKey('Whitelist').slice(2,3) === '1' && !this.showBiometricsOverlay) {
+    } else if (this.StorageProvider.getKey('Whitelist').slice(2, 3) === '1' && !this.showBiometricsOverlay) {
       console.log("whitelist enabled")
       request = {
         by: "Kiosk",
         description: "Access controle",
         credentials: []
       };
-      if (this.StorageProvider.getKey('Whitelist').slice(0,1) === '1' && !this.showBiometricsOverlay) {
+      if (this.StorageProvider.getKey('Whitelist').slice(0, 1) === '1' && !this.showBiometricsOverlay) {
         request.credentials.push({
           key: "PHONE_NUMBER",
           required: true,
@@ -298,7 +346,7 @@ export class AmComponent extends BaseComponent implements OnInit {
           provider: 'PHONE_NUMBER',
         })
       }
-      else if (this.StorageProvider.getKey('Whitelist').slice(0,1) === '0' && !this.showBiometricsOverlay) {
+      else if (this.StorageProvider.getKey('Whitelist').slice(0, 1) === '0' && !this.showBiometricsOverlay) {
         request.credentials.push({
           key: "EMAIL",
           required: true,
@@ -317,24 +365,24 @@ export class AmComponent extends BaseComponent implements OnInit {
   }
 
   userAllowedIn(type: string, value: any, logType: string): void {
-      if (type === "phone") {
-        console.log("Success!!!")
-        log.info(logType + value);
-        this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1)
-        this.ngZone.run(() => {
-          this.accessDenied = false;
-          this.accessGranted = true;
-        });
-      }
-      else if (type === "email") {
-        console.log("Success!!!")
-        log.info(logType + value);
-        this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1)
-        this.ngZone.run(() => {
-          this.accessDenied = false;
-          this.accessGranted = true;
-        });
-      }
+    if (type === "phone") {
+      console.log("Success!!!")
+      log.info(logType + value);
+      this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1)
+      this.ngZone.run(() => {
+        this.accessDenied = false;
+        this.accessGranted = true;
+      });
+    }
+    else if (type === "email") {
+      console.log("Success!!!")
+      log.info(logType + value);
+      this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1)
+      this.ngZone.run(() => {
+        this.accessDenied = false;
+        this.accessGranted = true;
+      });
+    }
   }
 
   userNotAllowedIn(type: string, value: any, logType: string) {
@@ -348,7 +396,7 @@ export class AmComponent extends BaseComponent implements OnInit {
         }, 1000);
       });
     } else if (type === "email") {
-      
+
     }
   }
 
@@ -389,63 +437,72 @@ export class AmComponent extends BaseComponent implements OnInit {
       if (this.StorageProvider.getKey('Whitelist').slice(2, 3) === "1") {
         const Whitelist = this.StorageProvider.getKey('Whitelist')
         switch (true) {
-          case Whitelist === "1111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS != undefined: { //Biometrics enabled 
-              this.whitelist.forEach(x => { 
-                if (x.credential === data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value && x.hasBiometrics === "Disabled") {
-                  x.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors
-                  x.hasBiometrics = "Enabled"                
+          case Whitelist === "1111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS != undefined: {
+            this.whitelist.forEach(user => {
+              if (user.credential === data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value) {
+                if (user.hasBiometrics === "Enabled") {
+                  this.appStateFacade.sendMessage({ message: "Updated your already existing biometrics", type: "SUCCESS" });
+                } else {
+                  user.hasBiometrics = "Enabled"
+                  this.appStateFacade.sendMessage({ message: "Successfully added biometrics.", type: "SUCCESS" });
                 }
-              })
-              console.log("TEST",this.whitelist)
-              this.StorageProvider.setKey('whitelistedUsers',this.whitelist)
+                user.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors
+              }
+            })
+            this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
             break;
           }
           case Whitelist === "0111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS != undefined: {
-            this.whitelist.forEach(x => { 
-              if (x.credential === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value && x.hasBiometrics === "Disabled") {
-                x.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors
-                x.hasBiometrics = "Enabled"                
+            this.whitelist.forEach(user => {
+              if (user.credential === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
+                if (user.hasBiometrics === "Enabled") {
+                  this.appStateFacade.sendMessage({ message: "Updated your already existing biometrics", type: "SUCCESS" });
+                } else {
+                  user.hasBiometrics = "Enabled"
+                  this.appStateFacade.sendMessage({ message: "Successfully added biometrics.", type: "SUCCESS" });
+                }
+                user.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors
               }
             })
-            this.StorageProvider.setKey('whitelistedUsers',this.whitelist)
+            this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
             break;
           }
-          case Whitelist === "1111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS === undefined: {  
+          case Whitelist === "1111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS === undefined: {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 1) === 1) {
               this.userAllowedIn('phone', data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '6 ')
             } else {
-              this.userNotAllowedIn('phone',data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn('phone', data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '7 ')
             }
             break;
           }
-          case Whitelist === "0111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS === undefined: { 
+          case Whitelist === "0111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS === undefined: {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 0) === 1) {
               this.userAllowedIn('email', data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '6 ')
             } else {
-              this.userNotAllowedIn('email',data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '7 ')
-            }         
+              this.userNotAllowedIn('email', data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '7 ')
+            }
             break;
           }
-          case Whitelist === '1011': { 
+          case Whitelist === '1011': {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 1) === 1) {
               this.userAllowedIn('phone', data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '6 ')
             }
             else {
-              this.userNotAllowedIn('phone',data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn('phone', data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '7 ')
             }
             break;
           }
-          case Whitelist === '0011': { 
+          case Whitelist === '0011': {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 0) === 1) {
               this.userAllowedIn('email', data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '6 ')
             }
             else {
-              this.userNotAllowedIn('email',data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn('email', data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '7 ')
             }
             break;
           }
           default: {
-            console.error('Whitelist',Whitelist)
+            console.error('Whitelist', Whitelist)
             break;
           }
         }
