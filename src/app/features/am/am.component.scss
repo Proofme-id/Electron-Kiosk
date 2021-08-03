@@ -65,9 +65,19 @@
     left: auto;
     top: 0;
     bottom: auto;
-    opacity: 0.3;
-    color: lightblue;
-    background-color: #000;
+    background: rgba(0, 0, 0, 0);
+  }
+
+  .neutral {
+    background: rgba(0, 0, 0, 0);
+  }
+
+  .success {
+    background: rgba(0, 255, 0, 0.5);
+  }
+
+  .error {
+    background: rgba(255, 0, 0, 0.5);
   }
 
   .overlay-message-popup {
@@ -75,14 +85,28 @@
   }
 
   #enroll-button {
-    border-radius: 0;
-    border-top-right-radius: 5px !important;
-    position: absolute;
-    right: auto;
-    left: 0;
-    top: auto;
-    bottom: 0;
-    color: white;
+    padding: 0px;
+    padding-top: 22px;
+    background-color: rgba(0,0,0,0);
+    z-index: 1;
+    margin: 16px;
+    text-align: center;
+    min-height: 210px;
+    min-width: 210px;
+    display: flex;
+    flex-direction: column;
+
+    &:hover {
+      color: white !important
+    }
+  }
+
+  #enroll-text {
+    font-size:xx-large
+  }
+
+  #enroll-icon {
+    font-size: 82px;
   }
 
   .top-right-config-link fa-icon {
@@ -107,19 +131,50 @@
     border-radius: 0;
   }
 
+  #bottom-row {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    background-color: rgba(0,0,0,.3);
+    z-index: 1;
+    margin-top: auto;
+  }
+
   #email-card {
-    position: absolute;
-    bottom: 0;
-    right: 0;
+    margin:16px;
   }
 
   #background-camera {
-    min-width: 100%;  
-    min-height: 100%;
+    div {
+      position: absolute;
+      display: flex;
+      align-items: center;
+    }
+    display: block;
     position: absolute;
+    height: auto;
+    bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
   }
 
-  #background-camera video {
-    min-height: 1035pxw
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
+  .display-none {
+    display: none;
+  }
+
+  #faAccessIcon {
+    margin: 0 auto;
+    bottom: auto;
+    font-size: 15rem;
+    color: white;
+    opacity: .5;
+  }
+
+
 }

@@ -9,6 +9,7 @@ import { StorageProvider } from '../../providers/storage-provider.service'
 import { Router } from '@angular/router';
 import * as log from "electron-log";
 import * as faceapi from "face-api.js";
+import { faCheck, faTimes, faUserPlus } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-am',
@@ -16,13 +17,19 @@ import * as faceapi from "face-api.js";
   styleUrls: ['./am.component.scss']
 })
 export class AmComponent extends BaseComponent implements OnInit, AfterViewInit {
+  faTimes = faTimes;
+  faCheck = faCheck;
+  faUserPlus = faUserPlus;
   validCredentialObj: IValidatedCredentials | IRequestedCredentialsCheckResult = null;
   requestedData: IRequestedCredentials = this.requestData();
-  @ViewChild("qrCodeCanvas")
-
+  @ViewChild("regular")
+  regular: ElementRef;
+  @ViewChild("noBiometrics")
+  noBiometrics: ElementRef;
+  @ViewChild("biometrics")
+  biometrics: ElementRef;
   @ViewChild('videoElement') videoElement: any;
 
-  qrCodeCanvas: ElementRef;
   date = new Date().toISOString()
   logsPath: string = process.env.APPDATA + '/proofmeid-kiosk/logs/' || (process.platform == 'darwin' ? process.env.HOME + '/Library/Logs/proofmeid-kiosk/' : process.env.HOME + "/.config/proofmeid-kiosk/logs/")
   signalingUrl = "wss://auth.proofme.id";
@@ -33,14 +40,22 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   accessDenied = false;
   whitelist: any[] = this.StorageProvider.getKey("whitelistedUsers")
   showQR: boolean;
-  showEmailOverlay: boolean;
-  @ViewChild("qrCodeCanvasEmail")
-  qrCodeCanvasEmail: ElementRef;
-  @ViewChild("qrCodeCanvasAddBiometrics")
-  qrCodeCanvasAddBiometrics: ElementRef;
+  showNoBiometricsOverlay: boolean;
+
   addBiometricsToWhitelisted: boolean = false;
   showBiometricsOverlay: boolean = false;
   video: any;
+  recogniseDistance = 0.5;
+  onCooldown: boolean = false;
+  accessCooldown: number = 15000;
+  pauseInterval: boolean = false;
+  hideEmailQR: boolean = false;
+  streamTracker: any = null;
+  noBiometricsFound: boolean = false;
+  neutral: boolean = true;
+  falseLogin: boolean = undefined;
+  biometricsAccess: boolean = false;
+  shouldShowQR: boolean;
 
   constructor(
     private router: Router,
@@ -66,9 +81,26 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   ngOnInit(): void {
     log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.storeRightTrustedAuthorities();
-    this.setupWebRtc('regular');
-    this.setupWebRtc('email');
-    this.startCamera();
+
+    if (this.StorageProvider.getKey('Whitelist').slice(2, 3) != '0' && this.StorageProvider.getKey('Whitelist').slice(1, 2) === '1') {
+      this.setupWebRtc('noBiometrics');
+      this.startCamera();
+    } else {
+      document.getElementById("config-button").classList.remove("display-none")
+
+      if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true) ) {
+        this.setupWebRtc('regular');
+      }
+    }
+  }
+
+  stopCamera(): void {
+    if (this.streamTracker) {
+      this.streamTracker.getTracks().forEach(track => {
+        track.stop();
+      });
+      this.video.srcObject = null;
+    }
   }
 
   async ngAfterViewInit() {
@@ -95,31 +127,134 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   }
 
   initCamera(config: any) {
-    var browser = <any>navigator;
+    let browser = <any>navigator;
 
-    browser.getUserMedia = (browser.getUserMedia ||
-      browser.webkitGetUserMedia ||
-      browser.mozGetUserMedia ||
-      browser.msGetUserMedia);
+    let users = this.StorageProvider.getKey('whitelistedUsers');
+    let labeledDescriptors = [];
+    users.forEach(user => {
+      let temp = new Float32Array(user.biometrics)
+      if (temp.length > 0) {
+        labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(
+          user.credential,
+          [temp]
+        ))
+      }
+    });
+    let FaceMatcher;
+    if (labeledDescriptors.length == 0) {
+      this.noBiometricsFound = true;
+    } else {
+      FaceMatcher = new faceapi.FaceMatcher(labeledDescriptors);
+      browser.getUserMedia = (browser.getUserMedia ||
+        browser.webkitGetUserMedia ||
+        browser.mozGetUserMedia ||
+        browser.msGetUserMedia);
+    }
 
     browser.mediaDevices.getUserMedia(config).then(stream => {
       this.video = this.videoElement.nativeElement;
       this.video.srcObject = stream;
+      this.streamTracker = stream;
+      document.getElementById("config-button").classList.remove("display-none")
+
       this.video.play().then(() => {
-          setInterval(async () => {
-            console.log(await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor());
-          }, 1000)
+        setInterval(async () => {
+          switch (true) {
+            case this.pauseInterval === true: {
+              return;
+            }
+            case this.onCooldown === true: {
+              return;
+            }
+            case this.noBiometricsFound === true: {
+              labeledDescriptors = [];
+              users = this.StorageProvider.getKey('whitelistedUsers');
+              this.neutral = false;
+              users.forEach(user => {
+                let temp = new Float32Array(user.biometrics)
+                if (temp.length > 0) {
+                  labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(
+                    user.credential,
+                    [temp]
+                  ))
+                }
+              });
+              if (labeledDescriptors.length == 0) {
+                this.noBiometricsFound = true;
+              } else {
+                this.noBiometricsFound = false;
+                FaceMatcher = new faceapi.FaceMatcher(labeledDescriptors);
+                browser.getUserMedia = (browser.getUserMedia ||
+                  browser.webkitGetUserMedia ||
+                  browser.mozGetUserMedia ||
+                  browser.msGetUserMedia);
+              }
+              this.falseLogin = true;
+              setTimeout(() => {
+                this.falseLogin = undefined;
+                this.neutral = true;
+              }, 1000);
+              return;
+            }
+            default: {
+              const singleResult = await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor()
+              if (singleResult) {
+                const bestMatch = FaceMatcher.findBestMatch(singleResult.descriptor);
+                if (bestMatch.distance <= this.recogniseDistance) {
+                  this.onCooldown = true;
+                  this.neutral = false;
+                  this.falseLogin = false;
+                  let correctSlot = this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1
+                  this.openDoor(correctSlot, "facialrecognition")
+
+                  setTimeout(() => {
+                    this.onCooldown = false;
+                  }, this.accessCooldown);
+                  return;
+                } else {
+                  this.falseLogin = true;
+                  setTimeout(() => {
+                    this.falseLogin = undefined;
+                    this.neutral = true;
+                  }, 1000);
+                  return;
+                }
+              } else {
+              }
+            }
+          }
+        }, 2500)
       });
     });
   }
 
-  openDoor(slot) {
+  openDoor(slot, type) {
     const timeout = 5000;
     this.relayProvider.switchSlot(slot, timeout);
-    this.accessGranted = true;
-    setTimeout(() => {
-      this.refreshWebsocketDisconnect();
-    }, timeout);
+    if (type != "facialrecognition") {
+      this.accessGranted = true;
+    } 
+
+    if (type === "biometrics") {
+      this.biometricsAccess = true;
+      setTimeout(() => {
+        this.refreshWebsocketDisconnect(type);
+        this.neutral = true;
+        this.falseLogin = undefined;
+        this.pauseInterval = false;
+      }, timeout);
+    } else if (type === "noBiometrics") {
+      setTimeout(() => {
+        this.refreshWebsocketDisconnect(type);
+        this.neutral = true;
+        this.falseLogin = undefined;
+        this.pauseInterval = false;
+      }, timeout);
+    } else {
+      setTimeout(() => {
+        this.refreshWebsocketDisconnect(type);
+      }, timeout);
+    }
   }
 
   searchRelays() {
@@ -130,7 +265,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     console.log(this.relayProvider.setActiveRelay(index))
   }
 
-  async setupWebRtc(type?: string) {
+  async setupWebRtc(type: any) {
     this.webRtcProvider.launchWebsocketClient({
       signalingUrl: this.signalingUrl,
       isHost: true
@@ -138,15 +273,22 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
 
     this.webRtcProvider.uuid$.pipe(skip(1), takeUntil(this.destroy$), filter(x => !!x)).subscribe(uuid => {
       let canvas;
-      if (type === "regular") {
-        canvas = this.qrCodeCanvas.nativeElement as HTMLCanvasElement;
-      } else if (type === "email") {
-        canvas = this.qrCodeCanvasEmail.nativeElement as HTMLCanvasElement;
-      } else if (type === "biometrics") {
-        canvas = this.qrCodeCanvasAddBiometrics.nativeElement as HTMLCanvasElement;
+      switch (type) {
+        case "biometrics": {
+          canvas = this.biometrics.nativeElement as HTMLCanvasElement;
+          break;
+        }
+        case "noBiometrics": {
+          canvas = this.noBiometrics.nativeElement as HTMLCanvasElement;
+          break;
+        }
+        default: {
+          canvas = this.regular.nativeElement as HTMLCanvasElement
+        }
       }
+
       this.websocketDisconnected = false;
-      console.log('Create QR-code and show!');
+      console.log('Create QR-code and show!', type);
       this.ngZone.run(() => {
         QRCode.toCanvas(canvas, `p2p:${uuid}:${encodeURIComponent(this.signalingUrl)}`, {
           width: 210
@@ -163,8 +305,10 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       if (data.action === 'p2pConnected' && data.p2pConnected) {
         // Login with mobile
         this.appStateFacade.setShowExternalInstruction(true);
-        if (type === "email" || type === "biometrics") {
-          this.showEmailOverlay = false;
+        this.falseLogin = undefined;
+        this.pauseInterval = true;
+        if (type === "noBiometrics" || type === "biometrics") {
+          this.showNoBiometricsOverlay = false;
           this.showBiometricsOverlay = false;
         }
         if (type === "biometrics") {
@@ -190,27 +334,29 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
               this.ngZone.run(() => {
                 this.showBiometricsOverlay = false;
               })
-            } else if (type === "email") {
-              this.showEmailOverlay = false;
+            } else if (type === "noBiometrics") {
+              this.showNoBiometricsOverlay = false;
             }
             setTimeout(() => {
-              this.refreshWebsocketDisconnect()
+              this.refreshWebsocketDisconnect(type)
             }, 1000);
           }
         }
       }
       if (data.action === "disconnect") {
         this.appStateFacade.setShowExternalInstruction(false);
+        this.falseLogin = undefined;
+        this.pauseInterval = false;
         this.websocketDisconnected = true;
         if (type === "biometrics") {
           this.ngZone.run(() => {
             this.showBiometricsOverlay = false;
           });
-        } else if (type === "email") {
-          this.showEmailOverlay = false;
+        } else if (type === "noBiometrics") {
+          this.showNoBiometricsOverlay = false;
         }
         setTimeout(() => {
-          this.refreshWebsocketDisconnect()
+          this.refreshWebsocketDisconnect(type)
         }, 1000);
       }
     });
@@ -220,10 +366,12 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   requestData(type?: string): IRequestedCredentials {
     let request: IRequestedCredentials;
     let credentials: boolean[]
-    if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true)) {
+
+    if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true) && this.StorageProvider.getKey('Whitelist').slice(1, 2) != "1"){
       this.showQR = true;
       credentials = this.StorageProvider.getKey("Credentials")
     }
+
 
     if (type === 'biometrics' && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '0') {
       request = {
@@ -332,7 +480,6 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
         }
       };
     } else if (this.StorageProvider.getKey('Whitelist').slice(2, 3) === '1' && !this.showBiometricsOverlay) {
-      console.log("whitelist enabled")
       request = {
         by: "Kiosk",
         description: "Access controle",
@@ -354,7 +501,10 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           provider: 'EMAIL',
         })
       }
-
+      if (this.StorageProvider.getKey('Whitelist').slice(1, 2) != "1") {
+        this.setupWebRtc('regular')
+        this.showQR = true;
+      }
     }
 
     return request;
@@ -364,40 +514,31 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     return this.StorageProvider.hasKey(key);
   }
 
-  userAllowedIn(type: string, value: any, logType: string): void {
-    if (type === "phone") {
-      console.log("Success!!!")
-      log.info(logType + value);
-      this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1)
-      this.ngZone.run(() => {
-        this.accessDenied = false;
-        this.accessGranted = true;
-      });
-    }
-    else if (type === "email") {
-      console.log("Success!!!")
-      log.info(logType + value);
-      this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1)
-      this.ngZone.run(() => {
-        this.accessDenied = false;
-        this.accessGranted = true;
-      });
-    }
+  getData(key: string): any {
+    return this.StorageProvider.getKey(key);
   }
 
-  userNotAllowedIn(type: string, value: any, logType: string) {
-    if (type === "phone") {
-      log.warn(logType + value);
-      this.ngZone.run(() => {
-        this.accessDenied = true;
-        this.accessGranted = false;
-        setTimeout(() => {
-          this.accessDenied = false;
-        }, 1000);
-      });
-    } else if (type === "email") {
+  userAllowedIn(value: any, logType: string, type: string): void {
+    console.log("Success!!!")
+    log.info(logType + value);
+    this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1, type)
+    this.setupWebRtc(type)
+    this.ngZone.run(() => {
+      this.accessDenied = false;
+      this.pauseInterval = true;
+      this.accessGranted = true;
+    });
+  }
 
-    }
+  userNotAllowedIn(value: any, logType: string) {
+    log.warn(logType + value);
+    this.ngZone.run(() => {
+      this.accessDenied = true;
+      this.accessGranted = false;
+      setTimeout(() => {
+        this.accessDenied = false;
+      }, 2000);
+    });
   }
 
   async validateIdentifyData(data, type?: string): Promise<void> {
@@ -426,10 +567,10 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       setTimeout(() => {
         if (type === "biometrics") {
           this.showBiometricsOverlay = false;
-        } else if (type === "email") {
-          this.showEmailOverlay = false;
+        } else if (type === "noBiometrics") {
+          this.showNoBiometricsOverlay = false;
         } else {
-          this.refreshWebsocketDisconnect()
+          this.refreshWebsocketDisconnect("regular")
         }
       }, 1000);
       console.error(this.validCredentialObj);
@@ -446,6 +587,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                   user.hasBiometrics = "Enabled"
                   this.appStateFacade.sendMessage({ message: "Successfully added biometrics.", type: "SUCCESS" });
                 }
+                this.hideEmailQR = false;
                 user.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors
               }
             })
@@ -461,6 +603,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                   user.hasBiometrics = "Enabled"
                   this.appStateFacade.sendMessage({ message: "Successfully added biometrics.", type: "SUCCESS" });
                 }
+                this.hideEmailQR = false;
                 user.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors
               }
             })
@@ -469,35 +612,35 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           }
           case Whitelist === "1111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS === undefined: {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 1) === 1) {
-              this.userAllowedIn('phone', data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '6 ')
+              this.userAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '6 ', "noBiometrics")
             } else {
-              this.userNotAllowedIn('phone', data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '7 ')
             }
             break;
           }
           case Whitelist === "0111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS === undefined: {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 0) === 1) {
-              this.userAllowedIn('email', data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '6 ')
+              this.userAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '6', "noBiometrics")
             } else {
-              this.userNotAllowedIn('email', data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '7 ')
             }
             break;
           }
           case Whitelist === '1011': {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 1) === 1) {
-              this.userAllowedIn('phone', data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '6 ')
+              this.userAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '6 ', "regular")
             }
             else {
-              this.userNotAllowedIn('phone', data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '7 ')
             }
             break;
           }
           case Whitelist === '0011': {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 0) === 1) {
-              this.userAllowedIn('email', data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '6 ')
+              this.userAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '6 ', "regular")
             }
             else {
-              this.userNotAllowedIn('email', data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '7 ')
             }
             break;
           }
@@ -507,29 +650,24 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           }
         }
       }
-      else if (this.StorageProvider.getKey('Whitelist').slice(2, 3) === "0") {
+      else if (this.StorageProvider.getKey('Whitelist').slice(2, 3) === "0" || this.StorageProvider.getKey("Whitelist") === "") {
         console.log("Success!!!")
-        this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1)
+        this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1, "regular")
         this.ngZone.run(() => {
           this.accessDenied = false;
           this.accessGranted = true;
+          this.pauseInterval = false;
         });
       }
     }
   }
 
-  async refreshWebsocketDisconnect(type?: string) {
+  async refreshWebsocketDisconnect(type: string) {
     this.ngZone.run(() => {
+      this.setupWebRtc(type);
       this.accessDenied = false;
       this.accessGranted = false;
     });
-    if (type === "biometrics") {
-      this.setupWebRtc('biometrics');
-    } else if (type === "email") {
-      this.setupWebRtc('email');
-    } else {
-      this.setupWebRtc('regular');
-    }
   }
 
   whitelistedExistsAndIsCorrect(whitelist: any, data: any, type: number): number {

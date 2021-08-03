@@ -1,58 +1,77 @@
 <div class="main-container">
 
-  <div id="background-camera">
+  <div id="background-camera"
+    *ngIf="this.getData('Whitelist').slice(1,2) === '1' && this.getData('Whitelist').slice(2,3) === '1'">
+    <div class="w-100 h-100" *ngIf="this.falseLogin === true || this.falseLogin === false"
+      [ngClass]="{'neutral': this.neutral === true,'success': this.falseLogin === false, 'error': this.falseLogin === true}">
+      <fa-icon [icon]="faTimes" id="faAccessIcon" *ngIf="this.falseLogin === true"></fa-icon>
+      <fa-icon [icon]="faCheck" id="faAccessIcon" *ngIf="this.falseLogin === false"></fa-icon>
+    </div>
     <video #videoElement id="videoElement"></video>
   </div>
 
 
-  <div class="card shadow" id="email-card" [hidden]="hideEmailQR">
-    <div class="card-body  text-center" id="email-body">
-      <div class="qr-code fixed-width d-flex flex-column align-items-center p-0" id="email-qr-code">
-        <div *ngIf="websocketDisconnected" class="disconnect-overlay" (click)="refreshWebsocketDisconnect('email')">
-          <p>{{ 'AM.disconnected' | translate }}</p>
+  <div class="row p-0" id="bottom-row"
+    *ngIf="this.getData('Whitelist').slice(1,2) === '1' && this.getData('Whitelist').slice(2,3) === '1'">
+
+    <a id="enroll-button"
+      (click)="requestData(); showBiometricsOverlay = true; this.setupWebRtc('biometrics'); this.hideEmailQR = true; this.pauseInterval = true;">
+      <fa-icon [icon]="faUserPlus" id="enroll-icon"></fa-icon>
+      <span id="enroll-text">
+        {{ 'AM.enroll' | translate }}
+      </span>
+    </a>
+ 
+    <div class="card shadow" id="email-card" [hidden]="hideEmailQR">
+      <div class="card-body  text-center" id="email-body">
+        <div class="qr-code fixed-width d-flex flex-column align-items-center p-0" id="email-qr-code">
+          <div *ngIf="websocketDisconnected" class="disconnect-overlay" (click)="refreshWebsocketDisconnect('email')">
+            <p>{{ 'AM.disconnected' | translate }}</p>
+          </div>
+          <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #noBiometrics></canvas>
         </div>
-        <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #qrCodeCanvasEmail></canvas>
       </div>
-      <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code' | translate }}</p>
-      <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code2' | translate }}</p>
     </div>
+
+
   </div>
 
   <div class="overlay-message" [hidden]="!showBiometricsOverlay">
     <div class="overlay-message-background" [hidden]="!showBiometricsOverlay"></div>
     <div class="overlay-message-popup text-center" [hidden]="!showBiometricsOverlay">
-      <div class="qr-code fixed-width d-flex flex-column">
+      <div class="qr-code fixed-width d-flex flex-column p-0">
         <div>
           <div *ngIf="websocketDisconnected" class="disconnect-overlay"
             (click)="refreshWebsocketDisconnect('biometrics')">
             <p>{{ 'AM.disconnected' | translate }}</p>
           </div>
-          <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #qrCodeCanvasAddBiometrics></canvas>
+          <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #biometrics></canvas>
         </div>
         <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code' | translate }}</p>
         <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code2' | translate }}</p>
         <button class="btn btn-danger w-100 cancelButton mt-1"
-          (click)="showBiometricsOverlay = false; hideEmailQR = false; setupWebRtc('email')">{{ 'CNF.cancel'
+          (click)="showBiometricsOverlay = false; hideEmailQR = false; setupWebRtc('noBiometrics');  this.pauseInterval = false;">{{
+          'CNF.cancel'
           | translate }}</button>
       </div>
     </div>
   </div>
 
   <div class="main-view-div"
-    [hidden]="accessGranted || accessDenied || this.StorageProvider.getKey('Whitelist').slice(1,2) === '1' && this.StorageProvider.getKey('Whitelist').slice(2,3) != '0'">
-    <div class="qr-code fixed-width" [hidden]="!showQR && this.StorageProvider.getKey('Whitelist').slice(2,3) != '0'">
+    [hidden]="!showQR">
+    <div class="qr-code fixed-width p-0" [hidden]="accessGranted || accessDenied">
       <div>
-        <div *ngIf="websocketDisconnected" class="disconnect-overlay" (click)="refreshWebsocketDisconnect()">
+        <div *ngIf="websocketDisconnected" class="disconnect-overlay" (click)="refreshWebsocketDisconnect('regular')">
           <p>{{ 'AM.disconnected' | translate }}</p>
         </div>
-        <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #qrCodeCanvas></canvas>
+        <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #regular></canvas>
       </div>
       <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code' | translate }}</p>
       <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code2' | translate }}</p>
     </div>
   </div>
 
-  <div *ngIf="!showQR && this.StorageProvider.getKey('Whitelist').slice(2,3) != '0'">
+  <div *ngIf="!showQR && this.getData('Whitelist').slice(2,3) != '1' ">
     <div class="card shadow mb-4">
       <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
         <h6 class="m-0 font-weight-bold text-primary">{{ 'AM.error_no_data' | translate }}</h6>
@@ -66,17 +85,11 @@
     </div>
   </div>
 
-  <a class="top-right-config-link" routerLink="/config">
+  <a id="config-button" class="top-right-config-link display-none" routerLink="/config" (click)="this.stopCamera();">
     <fa-icon [icon]="['fas', 'cog']"></fa-icon>
   </a>
 
-  <a id="enroll-button"
-    *ngIf="this.StorageProvider.getKey('Whitelist').slice(1,2) === '1' && this.StorageProvider.getKey('Whitelist').slice(2,3) === '1'"
-    (click)="requestData(); showBiometricsOverlay = true; this.setupWebRtc('biometrics'); hideEmailQR = true; this.start();">
-    {{ 'AM.enroll' | translate }}
-  </a>
-
-  <div class="overlay-message" *ngIf="accessGranted && !accessDenied">
+  <div class="overlay-message" *ngIf="accessGranted && !accessDenied && !biometricsAccess">
     <div class="overlay-message-background"></div>
     <div class="overlay-message-popup">
       <img src="./assets/img/undraw_door.svg" class="message-logo" alt="Welcome">
@@ -84,7 +97,7 @@
     </div>
   </div>
 
-  <div class="overlay-message" *ngIf="!accessGranted && accessDenied">
+  <div class="overlay-message" *ngIf="!accessGranted && accessDenied && !biometricsAccess">
     <div class="overlay-message-background"></div>
     <div class="overlay-message-popup">
       <img src="./assets/img/undraw_access_denied.svg" class="message-logo" alt="Access denied">

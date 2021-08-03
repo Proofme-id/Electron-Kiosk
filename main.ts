@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as url from 'url';
 const ElectronStore = require("electron-store");
 const HID = require('node-hid');
-const log = require('electron-log')
+const log = require('electron-log');
 
 let win: BrowserWindow = null;
 let relay = null;
@@ -251,11 +251,11 @@ ipcMain.on('hasKey', (event, key) => {
 
 ipcMain.on('deleteKey', (event, key) => {
   try {
-    event.returnValue = store.delete(key)
+    event.returnValue = store.delete(key);
   } catch (e) {
     event.returnValue = false;
   }
-})
+});
 
 ipcMain.on('deleteAllStored', (event, key) => {
   try {
@@ -263,4 +263,4 @@ ipcMain.on('deleteAllStored', (event, key) => {
   } catch (e) {
     event.returnValue = false;
   }
-})
+});
