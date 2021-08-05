@@ -20,6 +20,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   faTimes = faTimes;
   faCheck = faCheck;
   faUserPlus = faUserPlus;
+  whitelistStatus: string = this.StorageProvider.getKey("Whitelist") ? this.StorageProvider.getKey("Whitelist") : "";
   validCredentialObj: IValidatedCredentials | IRequestedCredentialsCheckResult = null;
   requestedData: IRequestedCredentials = this.requestData();
   @ViewChild("regular")
@@ -56,7 +57,6 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   falseLogin: boolean = undefined;
   biometricsAccess: boolean = false;
   shouldShowQR: boolean;
-  whitelistExists = this.StorageProvider.hasKey('Whitelist');
 
   constructor(
     private router: Router,
@@ -82,14 +82,13 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   ngOnInit(): void {
     log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.storeRightTrustedAuthorities();
-
-    if (this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) != '0' && this.StorageProvider.getKey('Whitelist').slice(1, 2) === '1') {
+    if (this.whitelistStatus.slice(2, 3) != '0' && this.whitelistStatus.slice(1, 2) === '1') {
       this.setupWebRtc('noBiometrics');
       this.startCamera();
     } else {
       document.getElementById("config-button").classList.remove("display-none")
 
-      if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true) ) {
+      if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true)) {
         this.setupWebRtc('regular');
       }
     }
@@ -105,9 +104,9 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   }
 
   async ngAfterViewInit() {
-    await faceapi.loadSsdMobilenetv1Model("/assets/models");
-    await faceapi.loadFaceLandmarkModel("/assets/models");
-    await faceapi.loadFaceRecognitionModel("/assets/models");
+    await faceapi.loadSsdMobilenetv1Model("assets/models");
+    await faceapi.loadFaceLandmarkModel("assets/models");
+    await faceapi.loadFaceRecognitionModel("assets/models");
     faceapi.env.monkeyPatch({
       Canvas: HTMLCanvasElement,
       Image: HTMLImageElement,
@@ -129,7 +128,6 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
 
   initCamera(config: any) {
     let browser = <any>navigator;
-
     let users = this.StorageProvider.getKey('whitelistedUsers');
     let labeledDescriptors = [];
     users.forEach(user => {
@@ -151,19 +149,18 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
         browser.mozGetUserMedia ||
         browser.msGetUserMedia);
     }
-
     browser.mediaDevices.getUserMedia(config).then(stream => {
       this.video = this.videoElement.nativeElement;
       this.video.srcObject = stream;
       this.streamTracker = stream;
       document.getElementById("config-button").classList.remove("display-none")
-
       this.video.play().then(() => {
         setInterval(async () => {
           switch (true) {
-            case this.pauseInterval === true: {
-              return;
-            }
+            case this.pauseInterval === true:
+              {
+                return;
+              }
             case this.onCooldown === true: {
               return;
             }
@@ -207,7 +204,6 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                   this.falseLogin = false;
                   let correctSlot = this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1
                   this.openDoor(correctSlot, "facialrecognition")
-
                   setTimeout(() => {
                     this.onCooldown = false;
                   }, this.accessCooldown);
@@ -234,7 +230,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     this.relayProvider.switchSlot(slot, timeout);
     if (type != "facialrecognition") {
       this.accessGranted = true;
-    } 
+    }
 
     if (type === "biometrics") {
       this.biometricsAccess = true;
@@ -375,13 +371,13 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   requestData(type?: string): IRequestedCredentials {
     let request: IRequestedCredentials;
     let credentials: boolean[]
-    if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true) && this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(1, 2) != "1"){
+    if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true) && this.whitelistStatus.slice(1, 2) != "1") {
       this.showQR = true;
       credentials = this.StorageProvider.getKey("Credentials")
     }
 
 
-    if (type === 'biometrics' && this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '0') {
+    if (type === 'biometrics' && this.whitelistStatus.slice(0, 1) === '0') {
       request = {
         by: "Kiosk",
         description: "Access controle",
@@ -401,7 +397,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       return request;
     }
 
-    if (type === 'biometrics' && this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '1') {
+    if (type === 'biometrics' && this.whitelistStatus.slice(0, 1) === '1') {
       request = {
         by: "Kiosk",
         description: "Access controle",
@@ -421,7 +417,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       return request;
     }
 
-    if (credentials && this.whitelistExists && (this.StorageProvider.getKey('Whitelist').slice(2, 3) === '0' || this.StorageProvider.getKey('Whitelist') === '')) {
+    if (credentials && (this.whitelistStatus.slice(2, 3) === '0' || this.whitelistStatus === '')) {
       const allCredentials = [
         {
           key: "AIR_TICKET",
@@ -487,13 +483,13 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           data: filteredMinRequired
         }
       };
-    } else if ( this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) === '1' && !this.showBiometricsOverlay) {
+    } else if (this.whitelistStatus.slice(2, 3) === '1' && !this.showBiometricsOverlay) {
       request = {
         by: "Kiosk",
         description: "Access controle",
         credentials: []
       };
-      if ( this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '1' && !this.showBiometricsOverlay) {
+      if (this.whitelistStatus.slice(0, 1) === '1' && !this.showBiometricsOverlay) {
         request.credentials.push({
           key: "PHONE_NUMBER",
           required: true,
@@ -501,7 +497,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           provider: 'PHONE_NUMBER',
         })
       }
-      else if ( this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '0' && !this.showBiometricsOverlay) {
+      else if (this.whitelistStatus.slice(0, 1) === '0' && !this.showBiometricsOverlay) {
         request.credentials.push({
           key: "EMAIL",
           required: true,
@@ -509,7 +505,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           provider: 'EMAIL',
         })
       }
-      if ( this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(1, 2) != "1") {
+      if (this.whitelistStatus.slice(1, 2) != "1") {
         this.setupWebRtc('regular')
         this.showQR = true;
       }
@@ -583,8 +579,8 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       }, 1000);
       console.error(this.validCredentialObj);
     } else {
-      if (this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) === "1") {
-        const Whitelist = this.StorageProvider.getKey('Whitelist')
+      if (this.whitelistStatus.slice(2, 3) === "1") {
+        const Whitelist = this.whitelistStatus
         switch (true) {
           case Whitelist === "1111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS != undefined: {
             this.whitelist.forEach(user => {
@@ -658,7 +654,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           }
         }
       }
-      else if (this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) === "0" || this.StorageProvider.getKey("Whitelist") === "") {
+      else if (this.whitelistStatus.slice(2, 3) === "0" || this.whitelistStatus === "") {
         console.log("Success!!!")
         this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1, "regular")
         this.ngZone.run(() => {
