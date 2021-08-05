@@ -83,7 +83,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     log.transports.file.resolvePath = () => this.logsPath + this.date.substr(0, 10) + ".log";
     this.storeRightTrustedAuthorities();
 
-    if (whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) != '0' && this.StorageProvider.getKey('Whitelist').slice(1, 2) === '1') {
+    if (this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) != '0' && this.StorageProvider.getKey('Whitelist').slice(1, 2) === '1') {
       this.setupWebRtc('noBiometrics');
       this.startCamera();
     } else {
@@ -375,13 +375,13 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   requestData(type?: string): IRequestedCredentials {
     let request: IRequestedCredentials;
     let credentials: boolean[]
-    if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true) && whitelistExists && this.StorageProvider.getKey('Whitelist').slice(1, 2) != "1"){
+    if (this.StorageProvider.hasKey("Credentials") && Object.values(this.StorageProvider.getKey("Credentials")).includes(true) && this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(1, 2) != "1"){
       this.showQR = true;
       credentials = this.StorageProvider.getKey("Credentials")
     }
 
 
-    if (type === 'biometrics' && whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '0') {
+    if (type === 'biometrics' && this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '0') {
       request = {
         by: "Kiosk",
         description: "Access controle",
@@ -401,7 +401,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       return request;
     }
 
-    if (type === 'biometrics' && whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '1') {
+    if (type === 'biometrics' && this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '1') {
       request = {
         by: "Kiosk",
         description: "Access controle",
@@ -421,7 +421,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       return request;
     }
 
-    if (credentials && whitelistExists && (this.StorageProvider.getKey('Whitelist').slice(2, 3) === '0' || this.StorageProvider.getKey('Whitelist') === '')) {
+    if (credentials && this.whitelistExists && (this.StorageProvider.getKey('Whitelist').slice(2, 3) === '0' || this.StorageProvider.getKey('Whitelist') === '')) {
       const allCredentials = [
         {
           key: "AIR_TICKET",
@@ -487,13 +487,13 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           data: filteredMinRequired
         }
       };
-    } else if ( whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) === '1' && !this.showBiometricsOverlay) {
+    } else if ( this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) === '1' && !this.showBiometricsOverlay) {
       request = {
         by: "Kiosk",
         description: "Access controle",
         credentials: []
       };
-      if ( whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '1' && !this.showBiometricsOverlay) {
+      if ( this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '1' && !this.showBiometricsOverlay) {
         request.credentials.push({
           key: "PHONE_NUMBER",
           required: true,
@@ -501,7 +501,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           provider: 'PHONE_NUMBER',
         })
       }
-      else if ( whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '0' && !this.showBiometricsOverlay) {
+      else if ( this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(0, 1) === '0' && !this.showBiometricsOverlay) {
         request.credentials.push({
           key: "EMAIL",
           required: true,
@@ -509,7 +509,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           provider: 'EMAIL',
         })
       }
-      if ( whitelistExists && this.StorageProvider.getKey('Whitelist').slice(1, 2) != "1") {
+      if ( this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(1, 2) != "1") {
         this.setupWebRtc('regular')
         this.showQR = true;
       }
@@ -583,7 +583,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       }, 1000);
       console.error(this.validCredentialObj);
     } else {
-      if (whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) === "1") {
+      if (this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) === "1") {
         const Whitelist = this.StorageProvider.getKey('Whitelist')
         switch (true) {
           case Whitelist === "1111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS != undefined: {
@@ -658,7 +658,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           }
         }
       }
-      else if (whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) === "0" || this.StorageProvider.getKey("Whitelist") === "") {
+      else if (this.whitelistExists && this.StorageProvider.getKey('Whitelist').slice(2, 3) === "0" || this.StorageProvider.getKey("Whitelist") === "") {
         console.log("Success!!!")
         this.openDoor(this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1, "regular")
         this.ngZone.run(() => {
