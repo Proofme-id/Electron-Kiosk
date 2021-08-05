@@ -1,7 +1,7 @@
 <div class="main-container">
 
   <div id="background-camera"
-    *ngIf="this.getData('Whitelist').slice(1,2) === '1' && this.getData('Whitelist').slice(2,3) === '1'">
+    *ngIf="this.getData('Whitelist') && this.getData('Whitelist').slice(1,2) === '1' && this.getData('Whitelist').slice(2,3) === '1'">
     <div class="w-100 h-100" *ngIf="this.falseLogin === true || this.falseLogin === false"
       [ngClass]="{'neutral': this.neutral === true,'success': this.falseLogin === false, 'error': this.falseLogin === true}">
       <fa-icon [icon]="faTimes" id="faAccessIcon" *ngIf="this.falseLogin === true"></fa-icon>
@@ -12,7 +12,7 @@
 
 
   <div class="row p-0" id="bottom-row"
-    *ngIf="this.getData('Whitelist').slice(1,2) === '1' && this.getData('Whitelist').slice(2,3) === '1'">
+    *ngIf="this.getData('Whitelist') && this.getData('Whitelist').slice(1,2) === '1' && this.getData('Whitelist').slice(2,3) === '1'">
 
     <a id="enroll-button"
       (click)="requestData(); showBiometricsOverlay = true; this.setupWebRtc('biometrics'); this.hideEmailQR = true; this.pauseInterval = true;">
@@ -71,7 +71,7 @@
     </div>
   </div>
 
-  <div *ngIf="!showQR && this.getData('Whitelist').slice(2,3) != '1' ">
+  <div *ngIf="!showQR && this.getData('Whitelist') && this.getData('Whitelist').slice(2,3) != '1' ">
     <div class="card shadow mb-4">
       <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
         <h6 class="m-0 font-weight-bold text-primary">{{ 'AM.error_no_data' | translate }}</h6>
