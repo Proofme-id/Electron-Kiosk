@@ -250,7 +250,15 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
         this.falseLogin = undefined;
         this.pauseInterval = false;
       }, timeout);
-    } else {
+    } else if (type == 'facialrecognition') {
+      setTimeout(() => {
+        this.refreshWebsocketDisconnect('noBiometrics');
+        this.neutral = true;
+        this.falseLogin = undefined;
+        this.pauseInterval = false;
+      }, timeout);
+    }
+    else {
       setTimeout(() => {
         this.refreshWebsocketDisconnect(type);
       }, timeout);

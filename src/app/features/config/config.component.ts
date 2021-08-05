@@ -50,9 +50,9 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   validCredentialObj: IValidatedCredentials | IRequestedCredentialsCheckResult = null;
   trustedAuthorities = ['0xa6De718CF5031363B40d2756f496E47abBab1515', '0x708686336db6A465C1161FD716a1d7dc507d1d17'] // ProofME production environment & ProofME Demo Environment
   websocketDisconnected: boolean = false;
-  accessGranted: boolean = true;
+  accessGranted: boolean = false;
   accessDenied: boolean = false;
-  overlayClosed: boolean = true;
+  overlayClosed: boolean = false;
   dateToday: string = (moment()).format('YYYY-MM-DD');
   country = (this.translateService.currentLang === "en") ? "us" : this.translateService.currentLang;
   public isLanguageCollapsed = true;
