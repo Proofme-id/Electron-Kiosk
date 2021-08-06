@@ -71,7 +71,7 @@
     </div>
   </div>
 
-  <div *ngIf="!showQR && this.getData('Whitelist') && this.getData('Whitelist').slice(2,3) != '1' ">
+  <div *ngIf="!showQR && this.whitelistStatus === ''">
     <div class="card shadow mb-4">
       <div class="card-header py-3 d-flex flex-row align-items-center justify-content-center">
         <h6 class="m-0 font-weight-bold text-primary">{{ 'AM.error_no_data' | translate }}</h6>
