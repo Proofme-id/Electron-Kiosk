@@ -66,8 +66,9 @@ $flag-icon-css-path: "~flag-icon-css/flags" !default;
   .remove-right-padding {
     padding-right: 0;
   }
-  .margin-left-remove-column {
-    margin-left: 75%;
+
+  .text-end {
+    text-align: end !important; 
   }
 
   .header-main-div {
@@ -134,6 +135,7 @@ $flag-icon-css-path: "~flag-icon-css/flags" !default;
     min-width: 100%;
     max-width: 100%;
     padding: 40px;
+    padding-top: 20px;
   }
 
   .header-main-title {
