@@ -642,6 +642,16 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   deleteAllStoredData(): void {
+    let directory = this.logsPath.substring(0,this.logsPath.length-1)
+    this.fs.readdir(directory, (err, files) => {
+      if (err) throw err;
+    
+      for (const file of files) {
+        this.fs.unlink(this.path.join(directory, file), err => {
+          if (err) throw err;
+        });
+      }
+    });
     this.StorageProvider.deleteAllStored();
     this.router.navigate(['/home'])
   }

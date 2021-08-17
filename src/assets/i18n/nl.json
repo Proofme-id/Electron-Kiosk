@@ -105,7 +105,7 @@
 		"welcome_message2": "Hier kunt u het logboek bekijken en de beheerders, het toegangsbeheer en algemene instellingen bewerken.",
 		"which_credentials": "Welke gegevens wilt u toestaan?",
 		"whitelist": "Whitelist",
-		"type": "{type, select, warn{WAARSCHUWING} info{INFO} other{ANDER}}",
+		"type": "{type, select, warn{MELDING} info{INFO} other{ANDER}}",
 		"message": "{type, select, 1{Gebruiker {user} heeft geen toegang gekregen vanwege invalide gegevens.} 2{Gebruiker {user} heeft ingelogd in de configuratie.} 3{Gebruiker {user} is aangeboden om zijn of haar beheerder gegevens te herstellen.} 4{Gebruiker {user} heeft zijn of haar beheerder gegevens hersteld.} 5{Gebruiker {user} heeft geen toegang gekregen tot de configuratie.} 6{Gebruiker {user} heeft toegang gekregen met een ingeschakelde whitelist. } 7{Gebruiker {user} heeft geen toegang gekregen met een ingeschakelde whitelist. } other{Error. Related to {user}}}",
 		"pick_date": "Kies een datum.",
 		"has_biometrics": "Biometrie",

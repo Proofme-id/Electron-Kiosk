@@ -432,16 +432,19 @@ $flag-icon-css-path: "~flag-icon-css/flags" !default;
   .error-badge {
     background-color: red;
     border: 1px solid red;
+    color: white;
   }
 
   .warn-badge {
     background-color: orangered;
     border: 1px solid orangered;
+    color: white;
   }
 
   .info-badge {
     background-color: #198ae3;
     border: 1px solid #198ae3;
+    color: white;
   }
 
   .badge {
