@@ -130,15 +130,17 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     let browser = <any>navigator;
     let users = this.StorageProvider.getKey('whitelistedUsers');
     let labeledDescriptors = [];
-    users.forEach(user => {
-      let temp = new Float32Array(user.biometrics)
-      if (temp.length > 0) {
-        labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(
-          user.credential,
-          [temp]
-        ))
-      }
-    });
+    if (users) {
+      users.forEach(user => {
+        let temp = new Float32Array(user.biometrics)
+        if (temp.length > 0) {
+          labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(
+            user.credential,
+            [temp]
+          ))
+        }
+      });
+    }
     let FaceMatcher;
     if (labeledDescriptors.length == 0) {
       this.noBiometricsFound = true;
@@ -168,15 +170,17 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
               labeledDescriptors = [];
               users = this.StorageProvider.getKey('whitelistedUsers');
               this.neutral = false;
-              users.forEach(user => {
-                let temp = new Float32Array(user.biometrics)
-                if (temp.length > 0) {
-                  labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(
-                    user.credential,
-                    [temp]
-                  ))
-                }
-              });
+              if (users) {
+                users.forEach(user => {
+                  let temp = new Float32Array(user.biometrics)
+                  if (temp.length > 0) {
+                    labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(
+                      user.credential,
+                      [temp]
+                    ))
+                  }
+                });
+              }
               if (labeledDescriptors.length == 0) {
                 this.noBiometricsFound = true;
               } else {
