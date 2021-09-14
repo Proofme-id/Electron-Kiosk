@@ -97,7 +97,7 @@
 		"recover": "Recover",
 		"remove": "Remove",
 		"scan_code": "Scan the QR-Code with the ProofMe App to",
-		"scan_code2": "Proof you have admin privileges.",
+		"scan_code2": "prove you have admin privileges.",
 		"scan_recover": "To recover your admin privileges",
 		"settings": "These are the settings.",
 		"welcome_message1": "Welcome to the control panel.",
@@ -105,7 +105,7 @@
 		"which_credentials": "Allow which credentials?",
 		"whitelist": "Whitelist",
 		"type": "{type, select, warn{WARN} info{INFO} other{OTHER}}",
-		"message": "{type, select, 1{User {user} was denied access because of invalid credentials.} 2{User {user} logged into the configuration.} 3{User {user} was offered to recover their admin credentials.} 4{User {user} has recovered their admin credentials.} 5{User {user} was denied access to the configuration.} 6{User {user} was allowed access with a whitelist enabled. } 7{User {user} was denied access with a whitelist enabled. } other{Error. Related to {user}}}",
+		"message": "{type, select, deniedInvalidCred{User {user} was denied access because of invalid credentials.} loggedIntoConfig{User {user} logged into the configuration.} offerAdminRecover{User {user} was offered to recover their admin credentials.} adminRecovered{User {user} has recovered their admin credentials.} configDeniedAccess{User {user} was denied access to the configuration.} accessedWithWhitelist{User {user} was allowed access with a whitelist enabled. } deniedWithWhitelist{User {user} was denied access with a whitelist enabled. } addedAdmin{User {user} was added as Admin} unknownFacialDenied{An unknown user tried to login using biometrics.} userAllowedBiometrics{User {user} was allowed access via biometrics.} userAddedBiometrics{User {user} linked their biometrics.} other{Error. Related to {user}}}",
 		"pick_date": "Pick a date.",
 		"completed_startup": "Congratulations! You've completed the first time startup.",
 		"has_biometrics": "Biometrics",
@@ -116,7 +116,10 @@
 		"please_add_admin": "Please add an admin before doing anything else.",
 		"confirm_data_delete": "Are you absolutely sure you want to reset the application?",
 		"confirm_data_delete2": "By doing this you will lose ALL stored data in the application.",
-		"back": "Back"
+		"back": "Back",
+		"access_cooldown": "Cooldown between entry: ",
+		"seconds": "seconds",
+		"recognise_distance": "Biometric accuracy: "
 	},
 	"INSTRUCTION_OVERLAY": {
 		"message": "Follow the instructions in the app"

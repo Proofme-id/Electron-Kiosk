@@ -106,7 +106,7 @@
 		"which_credentials": "Welke gegevens wilt u toestaan?",
 		"whitelist": "Whitelist",
 		"type": "{type, select, warn{MELDING} info{INFO} other{ANDER}}",
-		"message": "{type, select, 1{Gebruiker {user} heeft geen toegang gekregen vanwege invalide gegevens.} 2{Gebruiker {user} heeft ingelogd in de configuratie.} 3{Gebruiker {user} is aangeboden om zijn of haar beheerder gegevens te herstellen.} 4{Gebruiker {user} heeft zijn of haar beheerder gegevens hersteld.} 5{Gebruiker {user} heeft geen toegang gekregen tot de configuratie.} 6{Gebruiker {user} heeft toegang gekregen met een ingeschakelde whitelist. } 7{Gebruiker {user} heeft geen toegang gekregen met een ingeschakelde whitelist. } other{Error. Related to {user}}}",
+		"message": "{type, select, deniedInvalidCred{Gebruiker {user} heeft geen toegang gekregen vanwege invalide gegevens.} loggedIntoConfig{Gebruiker {user} heeft ingelogd in de configuratie.} offerAdminRecover{Gebruiker {user} is aangeboden om zijn of haar beheerder gegevens te herstellen.} adminRecovered{Gebruiker {user} heeft zijn of haar beheerder gegevens hersteld.} configDeniedAccess{Gebruiker {user} heeft geen toegang gekregen tot de configuratie.} accessedWithWhitelist{Gebruiker {user} heeft toegang gekregen met een ingeschakelde whitelist. } deniedWithWhitelist{Gebruiker {user} heeft geen toegang gekregen met een ingeschakelde whitelist. } unknownFacialDenied{Een onbekende gebruiker heeft geprobeerd in te loggen met biometrie.} userAllowedBiometrics{Gebruiker {user} heeft toegang gekregen door in te loggen met biometrie.} userAddedBiometrics{Gebruiker {user} heeft zijn of haar biometrie gelinked.} other{Error. Related to {user}}}",
 		"pick_date": "Kies een datum.",
 		"has_biometrics": "Biometrie",
 		"biometrics": "{type, select, Enabled{Biometrie gevonden} Disabled{Geen biometrie gevonden} other{ERROR}}",
@@ -117,7 +117,10 @@
 		"confirm_data_delete": "Weet u heel zeker dat u de applicatie wilt resetten?",
 		"confirm_data_delete2": "Door dit te doen verliest u alle data die opgeslagen staat in de applicatie.",
 		"back": "Terug", 
-		"completed_startup": "Gefeliciteerd! u hebt de eerste installatie voltooid."
+		"completed_startup": "Gefeliciteerd! u hebt de eerste installatie voltooid.",
+		"access_cooldown": "Tijd tussen toegang: ",
+		"seconds": "seconden",
+		"recognise_distance": "Biometrische nauwkeurigheid: "
 	},
 	"INSTRUCTION_OVERLAY": {
 		"message": "Volg de instructies in de app"

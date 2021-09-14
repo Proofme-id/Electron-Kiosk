@@ -66,6 +66,7 @@
     top: 0;
     bottom: auto;
     background: rgba(0, 0, 0, 0);
+    z-index: 999999;
   }
 
   .neutral {
@@ -87,7 +88,7 @@
   #enroll-button {
     padding: 0px;
     padding-top: 22px;
-    background-color: rgba(0,0,0,0);
+    background-color: rgba(0, 0, 0, 0);
     z-index: 1;
     margin: 16px;
     text-align: center;
@@ -97,12 +98,24 @@
     flex-direction: column;
 
     &:hover {
-      color: white !important
+      color: white !important;
     }
   }
 
+  #status-overlay {
+    z-index: 9999;
+  }
+
+  #videoElement {
+    height: 1024px;
+    width: 630px;
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg); /* Safari and Chrome */
+    -moz-transform: rotateY(180deg); /* Firefox */
+  }
+
   #enroll-text {
-    font-size:xx-large
+    font-size: xx-large;
   }
 
   #enroll-icon {
@@ -135,13 +148,13 @@
     display: flex;
     width: 100%;
     justify-content: space-between;
-    background-color: rgba(0,0,0,.3);
+    background-color: rgba(0, 0, 0, 0.3);
     z-index: 1;
     margin-top: auto;
   }
 
   #email-card {
-    margin:16px;
+    margin: 16px;
   }
 
   #background-camera {
@@ -173,8 +186,23 @@
     bottom: auto;
     font-size: 15rem;
     color: white;
-    opacity: .5;
+    opacity: 0.5;
   }
 
+  #facial-info {
+    margin: 5%;
+    padding: 20px;
+    position: absolute;
+    z-index: 1;
+    font-size: 48px;
+    color: white;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.3);
+    width: 90%;
+  }
 
+  .seethrough-card {
+    padding: 10px;
+    background-color: rgb(0, 0, 0, 0.4);
+  }
 }

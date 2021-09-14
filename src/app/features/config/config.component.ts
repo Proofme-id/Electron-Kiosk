@@ -112,6 +112,8 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   adminEmailCredentials: boolean = false;
   confirmDataDelete: boolean = false;
   confirmWhitelistDelete: boolean = false;
+  accessCooldownInput: string = (this.StorageProvider.hasKey('accessCooldown') ? ("" + (this.StorageProvider.getKey('accessCooldown') / 1000)) : '10');
+  recogniseDistanceInput: string = (this.StorageProvider.hasKey("recogniseDistance")) ? ("" + this.StorageProvider.getKey("recogniseDistance")) : '0.5';
 
   constructor(
     private router: Router,
@@ -125,7 +127,6 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   ) {
     super();
   }
-
 
   setPaginator(type: string): void {
     if (type === 'admin') {
@@ -192,7 +193,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     return this.StorageProvider.getKey(key);
   }
 
-  saveSettings(): void {
+  saveAccessSettings(): void {
     this.StorageProvider.setKey("Credentials", {
       AIR_TICKET: this.airChecked,
       SOC_TICKET: this.socChecked,
@@ -212,6 +213,27 @@ export class ConfigComponent extends BaseComponent implements OnInit {
         });
       }, 2500);
     }
+  }
+
+  saveGeneralSettings(): void {
+    let temp: number = + (this.accessCooldownInput.replace(/[^0-9]*/g, ''))
+    this.accessCooldownInput = "" + temp;
+    this.StorageProvider.setKey('accessCooldown', (temp * 1000));
+
+    temp = + this.recogniseDistanceInput
+    switch (true) {
+      case temp > 1:
+        temp = 0.5;
+        break;
+      case temp < 0:
+        temp = 0.5;
+        break;
+      default:
+        break;
+    }
+    this.recogniseDistanceInput = "" + temp;
+    this.StorageProvider.setKey('recogniseDistance', temp)
+    this.appStateFacade.sendMessage({ message: "Successfully saved settings.", type: "SUCCESS" });
   }
 
   ngOnInit(): void {
@@ -266,18 +288,19 @@ export class ConfigComponent extends BaseComponent implements OnInit {
         console: false
       });
       this.readInterface.on('line', function (line) {
+        let splitLine = line.split(' ');
         logLines.push({
           time: line.substring(12, 20),
           type: line.substring(27, 31),
-          messageType: line.substring(34, 35),
-          user: line.substring(36)
+          messageType: splitLine[4],
+          user: splitLine[5]
         })
       })
       setTimeout(() => {
         this.ngZone.run(() => {
           this.showLogsWelcome = false;
           this.foundLog = true;
-          this.dataSource.data = logLines
+          this.dataSource.data = logLines.reverse();
           this.dataSource.paginator = this.paginator;
         });
       }, 100);
@@ -553,9 +576,9 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     this.appStateFacade.setShowExternalInstruction(false);
     if (!(this.validCredentialObj as IValidatedCredentials).valid) {
       if (data.credentialObject.credentials.EMAIL != undefined) {
-        this.log.warn('1 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
+        this.log.warn('deniedInvalidCred ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
       } else if (data.credentialObject.credentials.PHONE_NUMBER != undefined) {
-        this.log.warn('1 ' + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
+        this.log.warn('deniedInvalidCred ' + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
       }
       this.ngZone.run(() => {
         this.accessDenied = true;
@@ -592,7 +615,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       }, 3500);
     }
     else if (this.adminExistsAndIsCorrect(this.admins, data) === 1 && this.adminRecovery === false) {
-      this.logRightCredential(data, '2 ');
+      this.logRightCredential(data, 'loggedIntoConfig ');
       console.log("Success!!!")
       this.ngZone.run(() => {
         this.accessDenied = false;
@@ -605,14 +628,14 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       }, 1500);
     }
     else if (this.adminExistsAndIsCorrect(this.admins, data) === 2 && this.adminRecovery === false) {
-      this.logRightCredential(data, '3 ');
+      this.logRightCredential(data, 'offerAdminRecover ');
       this.ngZone.run(() => {
         this.offerAdminRecovery = true;
         this.overlayClosed = false;
       });
     }
     else if (this.adminExistsAndIsCorrect(this.admins, data) === 2 && this.adminRecovery === true) {
-      this.logRightCredential(data, '4 ');
+      this.logRightCredential(data, 'adminRecovered ');
       this.ngZone.run(() => {
         this.accessGranted = true;
         this.accessDenied = false;
@@ -626,7 +649,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       });
     }
     else {
-      this.logRightCredential(data, '5 ')
+      this.logRightCredential(data, 'configDeniedAccess ')
       this.ngZone.run(() => {
         this.accessDenied = true;
         this.accessGranted = false;
@@ -642,10 +665,10 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   }
 
   deleteAllStoredData(): void {
-    let directory = this.logsPath.substring(0,this.logsPath.length-1)
+    let directory = this.logsPath.substring(0, this.logsPath.length - 1)
     this.fs.readdir(directory, (err, files) => {
       if (err) throw err;
-    
+
       for (const file of files) {
         this.fs.unlink(this.path.join(directory, file), err => {
           if (err) throw err;
@@ -667,8 +690,10 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   pushRightCredental(data: any) {
     if (this.StorageProvider.getKey("selectedAdminCredential") === "phone") {
       this.admins.push({ did: data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.id.substring(10), credential: data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, credentialobject: data.credentialObject })
+      this.log.warn('addedAdmin ' + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
     } else if (this.StorageProvider.getKey("selectedAdminCredential") === "email") {
       this.admins.push({ did: data.credentialObject.credentials.EMAIL.credentials.EMAIL.id.substring(10), credential: data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, credentialobject: data.credentialObject })
+      this.log.warn('addedAdmin ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
     }
   }
 

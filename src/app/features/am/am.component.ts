@@ -17,6 +17,8 @@ import { faCheck, faTimes, faUserPlus } from '@fortawesome/free-solid-svg-icons'
   styleUrls: ['./am.component.scss']
 })
 export class AmComponent extends BaseComponent implements OnInit, AfterViewInit {
+  log = require('electron-log')
+
   faTimes = faTimes;
   faCheck = faCheck;
   faUserPlus = faUserPlus;
@@ -29,6 +31,8 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   noBiometrics: ElementRef;
   @ViewChild("biometrics")
   biometrics: ElementRef;
+  @ViewChild("overlay")
+  overlay: ElementRef;
   @ViewChild('videoElement') videoElement: any;
 
   date = new Date().toISOString()
@@ -46,9 +50,9 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   addBiometricsToWhitelisted: boolean = false;
   showBiometricsOverlay: boolean = false;
   video: any;
-  recogniseDistance = 0.5;
+  recogniseDistance = this.StorageProvider.hasKey("recogniseDistance") ? this.StorageProvider.getKey("recogniseDistance") : 0.5;
   onCooldown: boolean = false;
-  accessCooldown: number = 15000;
+  accessCooldown: number = this.StorageProvider.hasKey("accessCooldown") ? this.StorageProvider.getKey("accessCooldown") : 10000;
   pauseInterval: boolean = false;
   hideEmailQR: boolean = false;
   streamTracker: any = null;
@@ -57,6 +61,14 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   falseLogin: boolean = undefined;
   biometricsAccess: boolean = false;
   shouldShowQR: boolean;
+  checkingForHappy: boolean;
+  singleResult;
+  firstScan: boolean;
+  neutralFace: Float32Array;
+  checkedForHappyCount: number = 0;
+  showFacialInfo: boolean;
+  facialInfoText: string;
+  
 
   constructor(
     private router: Router,
@@ -107,6 +119,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     await faceapi.loadSsdMobilenetv1Model("assets/models");
     await faceapi.loadFaceLandmarkModel("assets/models");
     await faceapi.loadFaceRecognitionModel("assets/models");
+    await faceapi.loadFaceExpressionModel("assets/models")
     faceapi.env.monkeyPatch({
       Canvas: HTMLCanvasElement,
       Image: HTMLImageElement,
@@ -119,8 +132,8 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
 
   startCamera(): void {
     this.initCamera({
-      width: { min: 360, ideal: 1024 },
-      height: { min: 360, ideal: 724 },
+      width: { min: 630, ideal: 630 },
+      height: { min: 1024, ideal: 1024 },
       frameRate: { ideal: 30, max: 60 },
       video: true, audio: false
     });
@@ -159,10 +172,9 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       this.video.play().then(() => {
         setInterval(async () => {
           switch (true) {
-            case this.pauseInterval === true:
-              {
-                return;
-              }
+            case this.pauseInterval === true: {
+              return;
+            }
             case this.onCooldown === true: {
               return;
             }
@@ -199,34 +211,91 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
               return;
             }
             default: {
-              const singleResult = await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor()
-              if (singleResult) {
-                const bestMatch = FaceMatcher.findBestMatch(singleResult.descriptor);
-                if (bestMatch.distance <= this.recogniseDistance) {
+              const result = await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor().withFaceExpressions();
+              if (result) {
+                const bestMatch = FaceMatcher.findBestMatch(result.descriptor);
+                this.showFacialInfo = true;
+                switch (true) {
+                  case result.alignedRect.box.height < 200:
+                    console.log("Please move closer to camera.")
+                    this.facialInfoText = "Move closer to the camera"
+                    setTimeout(() => {
+                      this.resetFacialChecking();
+                      this.falseLogin = undefined;
+                      this.neutral = true;
+                    }, 1000);
+                    return;
+                  case result.alignedRect.box.x < 115 || result.alignedRect.box.x > 260: {
+                    this.facialInfoText = "Move to the middle"
+                    console.log("Not in the middle of the screen.")
+                    return;
+                  }
+                  case result.expressions.neutral < 0.9 && !this.checkingForHappy:
+                    console.log("Please show neutral face", result.expressions.happy);
+                    this.facialInfoText = "Show a neutral face"
+                    return;
+                  case bestMatch.distance > this.recogniseDistance: {
+                    console.log("Face not on system.")
+                    this.log.warn('unknownFacialDenied ')
+                    this.falseLogin = true;
+                    this.showFacialInfo = false;
+                    setTimeout(() => {
+                      this.resetFacialChecking();
+                      this.falseLogin = undefined;
+                      this.neutral = true;
+                    }, 1000);
+                    return;
+                  }
+                  case !this.checkingForHappy:
+                    this.neutralFace = result.descriptor;
+                    console.log("Saved neutral face", result.expressions.neutral);
+                    this.checkingForHappy = true;
+                    console.log("Checking for happy");
+                    this.facialInfoText = "Smile!"
+                    break;
+                  default:
+                    console.log("Close enough to camera and checking for happy expression.")
+                    break;
+                }
+
+                if (result.expressions.happy > 0.9) {
                   this.onCooldown = true;
                   this.neutral = false;
                   this.falseLogin = false;
                   let correctSlot = this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1
                   this.openDoor(correctSlot, "facialrecognition")
+                  this.showFacialInfo = false;
+                  this.log.info('userAllowedBiometrics ' + bestMatch.label)
                   setTimeout(() => {
+                    this.resetFacialChecking();
                     this.onCooldown = false;
                   }, this.accessCooldown);
                   return;
-                } else {
-                  this.falseLogin = true;
-                  setTimeout(() => {
-                    this.falseLogin = undefined;
-                    this.neutral = true;
-                  }, 1000);
-                  return;
                 }
+
+                if (this.checkedForHappyCount === 5) {
+                  console.log("Checked smile too many times, reset");
+                  this.checkingForHappy = false;
+                  this.checkedForHappyCount = 0;
+                  return;
+                } else {
+                  this.checkedForHappyCount += 1;
+                }
+                console.log("Times checked for smile.", this.checkedForHappyCount);
               } else {
+                this.showFacialInfo = false
               }
             }
           }
         }, 2500)
       });
     });
+  }
+
+  resetFacialChecking(): void {
+    this.neutralFace = undefined;
+    this.checkingForHappy = undefined;
+    this.checkedForHappyCount = 0;
   }
 
   openDoor(slot, type) {
@@ -564,9 +633,9 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     this.appStateFacade.setShowExternalInstruction(false);
     if (!(this.validCredentialObj as IValidatedCredentials).valid) {
       if (data.credentialObject.credentials.EMAIL != undefined) {
-        log.warn('1 ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
+        log.warn('deniedInvalidCred ' + data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value);
       } else if (data.credentialObject.credentials.PHONE_NUMBER != undefined) {
-        log.warn('1 ' + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
+        log.warn('deniedInvalidCred ' + data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value);
       }
       this.ngZone.run(() => {
         this.accessDenied = true;
@@ -596,7 +665,8 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                   this.appStateFacade.sendMessage({ message: "Successfully added biometrics.", type: "SUCCESS" });
                 }
                 this.hideEmailQR = false;
-                user.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors
+                user.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors;
+                this.log.info("userAddedBiometrics ", data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value)
               }
             })
             this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
@@ -613,6 +683,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                 }
                 this.hideEmailQR = false;
                 user.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors
+                this.log.info("userAddedBiometrics ", data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value)
               }
             })
             this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
@@ -620,35 +691,35 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           }
           case Whitelist === "1111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS === undefined: {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 1) === 1) {
-              this.userAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '6 ', "noBiometrics")
+              this.userAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, 'accessedWithWhitelist ', "noBiometrics")
             } else {
-              this.userNotAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, 'deniedWithWhitelist ')
             }
             break;
           }
           case Whitelist === "0111" && data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS === undefined: {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 0) === 1) {
-              this.userAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '6', "noBiometrics")
+              this.userAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, 'accessedWithWhitelist ', "noBiometrics")
             } else {
-              this.userNotAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, 'deniedWithWhitelist ')
             }
             break;
           }
           case Whitelist === '1011': {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 1) === 1) {
-              this.userAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '6 ', "regular")
+              this.userAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, 'accessedWithWhitelist ', "regular")
             }
             else {
-              this.userNotAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn(data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value, 'deniedWithWhitelist ')
             }
             break;
           }
           case Whitelist === '0011': {
             if (this.whitelistedExistsAndIsCorrect(this.whitelist, data, 0) === 1) {
-              this.userAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '6 ', "regular")
+              this.userAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, 'accessedWithWhitelist ', "regular")
             }
             else {
-              this.userNotAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, '7 ')
+              this.userNotAllowedIn(data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value, 'deniedWithWhitelist ')
             }
             break;
           }
@@ -693,5 +764,4 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     }
     return 0;
   }
-
 }

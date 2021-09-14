@@ -2,11 +2,12 @@
 
   <div id="background-camera"
     *ngIf="this.getData('Whitelist') && this.getData('Whitelist').slice(1,2) === '1' && this.getData('Whitelist').slice(2,3) === '1'">
-    <div class="w-100 h-100" *ngIf="this.falseLogin === true || this.falseLogin === false"
+    <div id="status-overlay" class="w-100 h-100" *ngIf="this.falseLogin === true || this.falseLogin === false"
       [ngClass]="{'neutral': this.neutral === true,'success': this.falseLogin === false, 'error': this.falseLogin === true}">
       <fa-icon [icon]="faTimes" id="faAccessIcon" *ngIf="this.falseLogin === true"></fa-icon>
       <fa-icon [icon]="faCheck" id="faAccessIcon" *ngIf="this.falseLogin === false"></fa-icon>
     </div>
+    <label id="facial-info" *ngIf="showFacialInfo"> {{facialInfoText}} </label>
     <video #videoElement id="videoElement"></video>
   </div>
 
@@ -21,7 +22,7 @@
         {{ 'AM.enroll' | translate }}
       </span>
     </a>
- 
+
     <div class="card shadow" id="email-card" [hidden]="hideEmailQR">
       <div class="card-body  text-center" id="email-body">
         <div class="qr-code fixed-width d-flex flex-column align-items-center p-0" id="email-qr-code">
@@ -57,8 +58,7 @@
     </div>
   </div>
 
-  <div class="main-view-div"
-    [hidden]="!showQR">
+  <div class="main-view-div" [hidden]="!showQR">
     <div class="qr-code fixed-width p-0" [hidden]="accessGranted || accessDenied">
       <div>
         <div *ngIf="websocketDisconnected" class="disconnect-overlay" (click)="refreshWebsocketDisconnect('regular')">
@@ -66,8 +66,10 @@
         </div>
         <canvas [ngClass]="websocketDisconnected ? 'disconnected-qr' : ''" #regular></canvas>
       </div>
-      <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code' | translate }}</p>
-      <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code2' | translate }}</p>
+      <div class="seethrough-card">
+        <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code' | translate }}</p>
+        <p *ngIf="!websocketDisconnected" class="qr-code-text">{{ 'AM.scan_code2' | translate }}</p>
+      </div>
     </div>
   </div>
 
