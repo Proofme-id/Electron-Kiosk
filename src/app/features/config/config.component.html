@@ -224,6 +224,8 @@
             <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
         </a>
 
+        <a class="bottom-right-toggle-kiosk" (click)="toggleKioskMode();" *ngIf="!accessGranted"></a>
+
         <div class="main-view-div" [hidden]="accessGranted || accessDenied || adminRecovery || offerAdminRecovery">
             <div class="qr-code fixed-width">
                 <div>

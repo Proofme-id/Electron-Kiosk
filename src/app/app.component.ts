@@ -15,6 +15,7 @@ import { BaseComponent } from "./shared/components";
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent extends BaseComponent implements OnInit {
+  window = require('electron').remote.getCurrentWindow();
   async ngOnInit(): Promise<void> {
 
     this.appStateFacade.message$.pipe(takeUntil(this.destroy$)).subscribe((message) => {
@@ -42,6 +43,7 @@ export class AppComponent extends BaseComponent implements OnInit {
     @Inject(DOCUMENT) private document: Document
   ) {
     super();
+    this.window.setKiosk(true);
     
     if (this.StorageProvider.getKey('language')) {
       this.translate.setDefaultLang(this.StorageProvider.getKey('language'));

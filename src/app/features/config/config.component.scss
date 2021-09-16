@@ -111,6 +111,16 @@ $flag-icon-css-path: "~flag-icon-css/flags" !default;
     }
   }
 
+  .bottom-right-toggle-kiosk {
+    position: absolute;
+    right: 0;
+    left: auto;
+    top: auto;
+    bottom: 0;
+    opacity: 0;
+    background: rgba(0, 0, 0, 0);
+  }
+
   .top-right-am-link {
     position: absolute;
     right: 0;

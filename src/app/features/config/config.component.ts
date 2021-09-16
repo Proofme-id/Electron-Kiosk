@@ -26,7 +26,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   fs = require('fs');
   path = require('path')
   readline = require('readline');
-
+  window = require('electron').remote.getCurrentWindow();
 
   logInput: string = "";
   lines = [];
@@ -165,6 +165,10 @@ export class ConfigComponent extends BaseComponent implements OnInit {
 
   updateDemoAllowed(): void {
     this.existsData('allowDemo') ? this.deleteData('allowDemo') : this.storeData('allowDemo')
+  }
+
+  toggleKioskMode(): void {
+    this.window.isKiosk() ? this.window.setKiosk(false) : this.window.setKiosk(true);
   }
 
   resetShow(): void {

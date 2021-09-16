@@ -20,6 +20,7 @@ function createWindow(): BrowserWindow {
     kiosk: true,
     x: 0,
     y: 0,
+    frame: false,
     width: size.width,
     height: size.height,
     webPreferences: {
