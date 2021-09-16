@@ -1,4 +1,8 @@
 :host {
+  body {
+    overflow: hidden;
+  }
+  
   .overlay-message {
     width: 100%;
     height: 100%;

@@ -216,7 +216,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                 const bestMatch = FaceMatcher.findBestMatch(result.descriptor);
                 this.showFacialInfo = true;
                 switch (true) {
-                  case result.alignedRect.box.height < 200:
+                  case result.alignedRect.box.height < 175:
                     console.log("Please move closer to camera.")
                     this.facialInfoText = "Move closer to the camera"
                     setTimeout(() => {
