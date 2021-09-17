@@ -68,7 +68,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   checkedForExpressionCount: number = 0;
   showFacialInfo: boolean;
   facialInfoText: string;
-  testing: boolean = true; // <-- CHANGE WHEN BUILDING OR PUSHING TO GITHUB.
+  testing: boolean = false; // <-- CHANGE WHEN BUILDING OR PUSHING TO GITHUB.
   checkInterval: number = this.testing ? 2500 : 100;
   checkingForNeutral: boolean;
 
