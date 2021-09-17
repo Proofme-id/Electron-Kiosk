@@ -174,6 +174,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       document.getElementById("config-button").classList.remove("display-none")
       this.video.play().then(() => {
         setInterval(async () => {
+          var start = new Date().getTime();
           switch (true) {
             case this.falseLogin === false || this.falseLogin === true: {
               return;
@@ -310,6 +311,8 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
               }
             }
           }
+          var end = new Date().getTime();
+          console.log("Time: ", end - start)
         }, this.checkInterval)
       });
     });
