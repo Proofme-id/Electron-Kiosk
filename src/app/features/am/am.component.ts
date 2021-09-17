@@ -205,7 +205,9 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                   browser.mozGetUserMedia ||
                   browser.msGetUserMedia);
               }
-              this.falseLogin = true;
+              if (this.falseLogin === undefined) {
+                this.falseLogin = true;
+              }
               setTimeout(() => {
                 this.falseLogin = undefined;
                 this.neutral = true;
@@ -220,7 +222,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                 this.showFacialInfo = true;
                 switch (true) {
                   case result.alignedRect.box.height < 160:
-                    console.log("Please move closer to camera.")
+                    // console.log("Please move closer to camera.")
                     this.facialInfoText = "Move closer to the camera"
                     setTimeout(() => {
                       this.resetFacialChecking();
@@ -230,13 +232,15 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                     return;
                   case result.alignedRect.box.x < 115 || result.alignedRect.box.x > 260: {
                     this.facialInfoText = "Move to the middle"
-                    console.log("Not in the middle of the screen.")
+                    // console.log("Not in the middle of the screen.")
                     return;
                   }
                   case bestMatchAccess === false: {
-                    console.log("Face on system but user has no access.")
+                    // console.log("Face on system but user has no access.")
                     this.log.warn('userNoAccessDenied ' + bestMatch.label)
-                    this.falseLogin = true;
+                    if (this.falseLogin === undefined) {
+                      this.falseLogin = true;
+                    }
                     this.showFacialInfo = false;
                     setTimeout(() => {
                       this.resetFacialChecking();
@@ -247,18 +251,20 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                   }
                   case (result.expressions.neutral < 0.9 || result.expressions.happy < 0.9) && this.checkingForNeutral === undefined && this.checkingForHappy === undefined: {
                     this.face = result.descriptor;
-                    console.log("Saved face");
+                    // console.log("Saved face");
                     result.expressions.neutral > 0.9 ? this.checkingForHappy = true : this.checkingForNeutral = true;
-                    console.log("check happy: ", this.checkingForHappy)
-                    console.log("check neutral: ", this.checkingForNeutral)
-                    console.log("Checking for expression: ", this.checkingForHappy === true ? "Happy" : "Neutral")
+                    // console.log("check happy: ", this.checkingForHappy)
+                    // console.log("check neutral: ", this.checkingForNeutral)
+                    // console.log("Checking for expression: ", this.checkingForHappy === true ? "Happy" : "Neutral")
                     this.facialInfoText = (this.checkingForHappy === true ? "Smile!" : "Look neutral!")
                     break;
                   }
                   case bestMatch.distance > this.recogniseDistance: {
                     console.log("Face not on system.")
                     this.log.warn('unknownFacialDenied ')
-                    this.falseLogin = true;
+                    if (this.falseLogin === undefined) {
+                      this.falseLogin = true;
+                    }
                     this.showFacialInfo = false;
                     setTimeout(() => {
                       this.resetFacialChecking();
@@ -268,12 +274,12 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                     return;
                   }
                   default:
-                    console.log("Close enough to camera and checking for expression.")
+                    // console.log("Close enough to camera and checking for expression.")
                     break;
                 }
 
-                console.log("euclidean distance: ", faceapi.euclideanDistance(this.face, result.descriptor))
-                if (((result.expressions.happy > 0.9 && this.checkingForHappy) || (result.expressions.neutral > 0.9 && this.checkingForNeutral)) && faceapi.euclideanDistance(this.face, result.descriptor) < this.recogniseDistance ) {
+                // console.log("euclidean distance: ", faceapi.euclideanDistance(this.face, result.descriptor))
+                if (((result.expressions.happy > 0.9 && this.checkingForHappy) || (result.expressions.neutral > 0.9 && this.checkingForNeutral)) && faceapi.euclideanDistance(this.face, result.descriptor) < this.recogniseDistance) {
                   this.onCooldown = true;
                   this.neutral = false;
                   this.falseLogin = false;
@@ -288,14 +294,14 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                   return;
                 }
 
-                if (this.checkedForExpressionCount === 5) {
-                  console.log("Checked smile too many times, reset");
+                if (this.checkedForExpressionCount === 25) {
+                  // console.log("Checked smile too many times, reset");
                   this.resetFacialChecking();
                   return;
                 } else {
                   this.checkedForExpressionCount += 1;
                 }
-                console.log("Times checked for expression.", this.checkedForExpressionCount);
+                // console.log("Times checked for expression.", this.checkedForExpressionCount);
               } else {
                 this.showFacialInfo = false
               }
@@ -801,7 +807,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   Access(bestMatch: any): boolean {
     let result = false;
     this.whitelist.forEach(user => {
-    if (user.credential === bestMatch.label && user.hasAccess === true) {
+      if (user.credential === bestMatch.label && user.hasAccess === true) {
         result = true;
       }
     });
