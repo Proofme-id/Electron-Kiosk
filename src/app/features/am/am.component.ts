@@ -70,7 +70,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   showFacialInfo: boolean;
   facialInfoText: string;
   testing: boolean = false; // <-- CHANGE WHEN BUILDING OR PUSHING TO GITHUB.
-  checkInterval: number = this.testing ? 2500 : 100;
+  checkInterval: number = this.testing ? 2500 : 200;
   checkingForNeutral: boolean;
 
   constructor(
@@ -230,7 +230,6 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                     this.facialInfoText = "Move closer to the camera"
                     setTimeout(() => {
                       this.resetFacialChecking();
-                      this.falseLogin = undefined;
                       this.neutral = true;
                     }, 1000);
                     return;
@@ -250,7 +249,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                       this.resetFacialChecking();
                       this.falseLogin = undefined;
                       this.neutral = true;
-                    }, 1000);
+                    }, 3000);
                     return;
                   }
                   case (result.expressions.neutral < 0.9 || result.expressions.happy < 0.9) && this.checkingForNeutral === undefined && this.checkingForHappy === undefined: {
@@ -274,7 +273,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                       this.resetFacialChecking();
                       this.falseLogin = undefined;
                       this.neutral = true;
-                    }, 1000);
+                    }, 3000);
                     return;
                   }
                   default:
