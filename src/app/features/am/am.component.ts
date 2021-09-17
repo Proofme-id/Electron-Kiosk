@@ -173,151 +173,183 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       this.streamTracker = stream;
       document.getElementById("config-button").classList.remove("display-none")
       this.video.play().then(() => {
-        setInterval(async () => {
-          var start = new Date().getTime();
-          switch (true) {
-            case this.falseLogin === false || this.falseLogin === true: {
-              return;
-            }
-            case this.pauseInterval === true: {
-              return;
-            }
-            case this.onCooldown === true: {
-              return;
-            }
-            case this.noBiometricsFound === true: {
-              labeledDescriptors = [];
-              users = this.StorageProvider.getKey('whitelistedUsers');
-              this.neutral = false;
-              if (users) {
-                users.forEach(user => {
-                  let temp = new Float32Array(user.biometrics)
-                  if (temp.length > 0) {
-                    labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(
-                      user.credential,
-                      [temp]
-                    ))
-                  }
-                });
-              }
-              if (labeledDescriptors.length == 0) {
-                this.noBiometricsFound = true;
-              } else {
-                this.noBiometricsFound = false;
-                FaceMatcher = new faceapi.FaceMatcher(labeledDescriptors);
-                browser.getUserMedia = (browser.getUserMedia ||
-                  browser.webkitGetUserMedia ||
-                  browser.mozGetUserMedia ||
-                  browser.msGetUserMedia);
-              }
-              if (this.falseLogin === undefined) {
-                this.falseLogin = true;
-              }
-              setTimeout(() => {
-                this.falseLogin = undefined;
-                this.neutral = true;
-              }, 1000);
-              return;
-            }
-            default: {
-              const result = await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor().withFaceExpressions();
-              if (result) {
-                const bestMatch = FaceMatcher.findBestMatch(result.descriptor);
-                var bestMatchAccess = this.Access(bestMatch)
-                this.showFacialInfo = true;
-                switch (true) {
-                  case result.alignedRect.box.height < 160:
-                    // console.log("Please move closer to camera.")
-                    this.facialInfoText = "Move closer to the camera"
-                    setTimeout(() => {
-                      this.resetFacialChecking();
-                      this.neutral = true;
-                    }, 1000);
-                    return;
-                  case result.alignedRect.box.x < 115 || result.alignedRect.box.x > 260: {
-                    this.facialInfoText = "Move to the middle"
-                    // console.log("Not in the middle of the screen.")
-                    return;
-                  }
-                  case bestMatchAccess === false: {
-                    // console.log("Face on system but user has no access.")
-                    this.log.warn('userNoAccessDenied ' + bestMatch.label)
-                    if (this.falseLogin === undefined) {
-                      this.falseLogin = true;
-                    }
-                    this.showFacialInfo = false;
-                    setTimeout(() => {
-                      this.resetFacialChecking();
-                      this.falseLogin = undefined;
-                      this.neutral = true;
-                    }, 3000);
-                    return;
-                  }
-                  case (result.expressions.neutral < 0.9 || result.expressions.happy < 0.9) && this.checkingForNeutral === undefined && this.checkingForHappy === undefined: {
-                    this.face = result.descriptor;
-                    // console.log("Saved face");
-                    result.expressions.neutral > 0.9 ? this.checkingForHappy = true : this.checkingForNeutral = true;
-                    // console.log("check happy: ", this.checkingForHappy)
-                    // console.log("check neutral: ", this.checkingForNeutral)
-                    // console.log("Checking for expression: ", this.checkingForHappy === true ? "Happy" : "Neutral")
-                    this.facialInfoText = (this.checkingForHappy === true ? "Smile!" : "Look neutral!")
-                    break;
-                  }
-                  case bestMatch.distance > this.recogniseDistance: {
-                    console.log("Face not on system.")
-                    this.log.warn('unknownFacialDenied ')
-                    if (this.falseLogin === undefined) {
-                      this.falseLogin = true;
-                    }
-                    this.showFacialInfo = false;
-                    setTimeout(() => {
-                      this.resetFacialChecking();
-                      this.falseLogin = undefined;
-                      this.neutral = true;
-                    }, 3000);
-                    return;
-                  }
-                  default:
-                    // console.log("Close enough to camera and checking for expression.")
-                    break;
-                }
-
-                // console.log("euclidean distance: ", faceapi.euclideanDistance(this.face, result.descriptor))
-                if (((result.expressions.happy > 0.9 && this.checkingForHappy) || (result.expressions.neutral > 0.9 && this.checkingForNeutral)) && faceapi.euclideanDistance(this.face, result.descriptor) < this.recogniseDistance) {
-                  this.onCooldown = true;
-                  this.neutral = false;
-                  this.falseLogin = false;
-                  let correctSlot = this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1
-                  this.openDoor(correctSlot, "facialrecognition")
-                  this.showFacialInfo = false;
-                  this.log.info('userAllowedBiometrics ' + bestMatch.label)
-                  setTimeout(() => {
-                    this.resetFacialChecking();
-                    this.onCooldown = false;
-                  }, this.accessCooldown);
-                  return;
-                }
-
-                if (this.checkedForExpressionCount === 25) {
-                  // console.log("Checked smile too many times, reset");
-                  this.resetFacialChecking();
-                  return;
-                } else {
-                  this.checkedForExpressionCount += 1;
-                }
-                // console.log("Times checked for expression.", this.checkedForExpressionCount);
-              } else {
-                this.showFacialInfo = false
-              }
-            }
-          }
-          var end = new Date().getTime();
-          console.log("Time: ", end - start)
-        }, this.checkInterval)
+          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser);
       });
     });
   }
 
+  async faceCheck(labeledDescriptors, users, FaceMatcher, browser): Promise<void> {
+    switch (true) {
+      case this.falseLogin === false || this.falseLogin === true: {
+        setTimeout(() => {
+          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+        }, this.checkInterval);
+        return;
+      }
+      case this.pauseInterval === true: {
+        setTimeout(() => {
+          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+        }, this.checkInterval);
+        return;
+      }
+      case this.onCooldown === true: {
+        setTimeout(() => {
+          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+        }, this.checkInterval);
+        return;
+      }
+      case this.noBiometricsFound === true: {
+        labeledDescriptors = [];
+        users = this.StorageProvider.getKey('whitelistedUsers');
+        this.neutral = false;
+        if (users) {
+          users.forEach(user => {
+            let temp = new Float32Array(user.biometrics)
+            if (temp.length > 0) {
+              labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(
+                user.credential,
+                [temp]
+              ))
+            }
+          });
+        }
+        if (labeledDescriptors.length == 0) {
+          this.noBiometricsFound = true;
+        } else {
+          this.noBiometricsFound = false;
+          FaceMatcher = new faceapi.FaceMatcher(labeledDescriptors);
+          browser.getUserMedia = (browser.getUserMedia ||
+            browser.webkitGetUserMedia ||
+            browser.mozGetUserMedia ||
+            browser.msGetUserMedia);
+        }
+        if (this.falseLogin === undefined) {
+          this.falseLogin = true;
+        }
+        setTimeout(() => {
+          this.falseLogin = undefined;
+          this.neutral = true;
+        }, 1000);
+        setTimeout(() => {
+          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+        }, this.checkInterval);
+        return;
+      }
+      default: {
+        const result = await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor().withFaceExpressions();
+        if (result) {
+          const bestMatch = FaceMatcher.findBestMatch(result.descriptor);
+          var bestMatchAccess = this.Access(bestMatch)
+          this.showFacialInfo = true;
+          switch (true) {
+            case result.alignedRect.box.height < 160:
+              // console.log("Please move closer to camera.")
+              this.facialInfoText = "Move closer to the camera"
+              setTimeout(() => {
+                this.resetFacialChecking();
+                this.neutral = true;
+              }, 1000);
+              setTimeout(() => {
+                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+              }, this.checkInterval);
+              return;
+            case result.alignedRect.box.x < 115 || result.alignedRect.box.x > 260: {
+              this.facialInfoText = "Move to the middle"
+              // console.log("Not in the middle of the screen.")
+              setTimeout(() => {
+                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+              }, this.checkInterval);
+              return;
+            }
+            case bestMatchAccess === false: {
+              // console.log("Face on system but user has no access.")
+              this.log.warn('userNoAccessDenied ' + bestMatch.label)
+              if (this.falseLogin === undefined) {
+                this.falseLogin = true;
+              }
+              this.showFacialInfo = false;
+              setTimeout(() => {
+                this.resetFacialChecking();
+                this.falseLogin = undefined;
+                this.neutral = true;
+              }, 3000);
+              setTimeout(() => {
+                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+              }, this.checkInterval);
+              return;
+            }
+            case (result.expressions.neutral < 0.9 || result.expressions.happy < 0.9) && this.checkingForNeutral === undefined && this.checkingForHappy === undefined: {
+              this.face = result.descriptor;
+              // console.log("Saved face");
+              result.expressions.neutral > 0.9 ? this.checkingForHappy = true : this.checkingForNeutral = true;
+              // console.log("check happy: ", this.checkingForHappy)
+              // console.log("check neutral: ", this.checkingForNeutral)
+              // console.log("Checking for expression: ", this.checkingForHappy === true ? "Happy" : "Neutral")
+              this.facialInfoText = (this.checkingForHappy === true ? "Smile!" : "Look neutral!")
+              break;
+            }
+            case bestMatch.distance > this.recogniseDistance: {
+              console.log("Face not on system.")
+              this.log.warn('unknownFacialDenied ')
+              if (this.falseLogin === undefined) {
+                this.falseLogin = true;
+              }
+              this.showFacialInfo = false;
+              setTimeout(() => {
+                this.resetFacialChecking();
+                this.falseLogin = undefined;
+                this.neutral = true;
+              }, 3000);
+              setTimeout(() => {
+                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+              }, this.checkInterval);
+              return;
+            }
+            default:
+              // console.log("Close enough to camera and checking for expression.")
+              break;
+          }
+
+          // console.log("euclidean distance: ", faceapi.euclideanDistance(this.face, result.descriptor))
+          if (((result.expressions.happy > 0.9 && this.checkingForHappy) || (result.expressions.neutral > 0.9 && this.checkingForNeutral)) && faceapi.euclideanDistance(this.face, result.descriptor) < this.recogniseDistance) {
+            this.onCooldown = true;
+            this.neutral = false;
+            this.falseLogin = false;
+            let correctSlot = this.StorageProvider.hasKey('openDoorValue') ? this.StorageProvider.getKey('openDoorValue') : 1
+            this.openDoor(correctSlot, "facialrecognition")
+            this.showFacialInfo = false;
+            this.log.info('userAllowedBiometrics ' + bestMatch.label)
+            setTimeout(() => {
+              this.resetFacialChecking();
+              this.onCooldown = false;
+            }, this.accessCooldown);
+            setTimeout(() => {
+              this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+            }, this.checkInterval);
+            return;
+          }
+
+          if (this.checkedForExpressionCount === 25) {
+            // console.log("Checked smile too many times, reset");
+            this.resetFacialChecking();
+            setTimeout(() => {
+              this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+            }, this.checkInterval);
+            return;
+          } else {
+            this.checkedForExpressionCount += 1;
+          }
+          // console.log("Times checked for expression.", this.checkedForExpressionCount);
+        } else {
+          this.showFacialInfo = false
+        }
+      }
+    }
+
+    setTimeout(() => {
+      this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+    }, this.checkInterval);
+  }
   resetFacialChecking(): void {
     this.face = undefined;
     this.checkingForHappy = undefined;
