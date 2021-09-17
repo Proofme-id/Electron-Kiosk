@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 import * as log from "electron-log";
 import * as faceapi from "face-api.js";
 import { faCheck, faTimes, faUserPlus } from '@fortawesome/free-solid-svg-icons';
+import { ThrowStmt } from '@angular/compiler';
 
 @Component({
   selector: 'app-am',
@@ -174,6 +175,9 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       this.video.play().then(() => {
         setInterval(async () => {
           switch (true) {
+            case this.falseLogin === false || this.falseLogin === true: {
+              return;
+            }
             case this.pauseInterval === true: {
               return;
             }
