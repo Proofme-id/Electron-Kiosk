@@ -101,7 +101,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
   adminDisplayedColumns: string[] = ['credential', 'remove'];
   whitelistDataSource = new MatTableDataSource<string>(this.whitelist);
   enableBiometrics: boolean = this.StorageProvider.hasKey('Whitelist') ? (this.StorageProvider.getKey('Whitelist').slice(1, 2) === "1") ? true : false : false
-  whitelistDisplayedColumns: string[] = this.enableBiometrics === true ? ['credential', 'biometrics', 'remove'] : ['credential', 'remove']
+  whitelistDisplayedColumns: string[] = this.enableBiometrics === true ? ['credential', 'biometrics', 'hasAccess', 'remove'] : ['credential', 'hasAccess', 'remove']
   relayDisplayedColumns: string[] = ['name', 'slot', 'open']
   showWhitelist: boolean = false;
   showTutorialStep: number;
@@ -541,6 +541,15 @@ export class ConfigComponent extends BaseComponent implements OnInit {
     }
   }
 
+  updateAccess(userCredential): void {
+    this.whitelist.forEach(user => {
+      if (user.credential === userCredential) {
+        user.hasAccess = !user.hasAccess;
+        this.StorageProvider.setKey('whitelistedUsers', this.whitelist);
+      }
+    })
+  }
+
   addUserToWhitelist(): void {
     if (this.whitelistedExistsAndIsCorrect(this.whitelist) === 0) {
       this.ngZone.run(() => {
@@ -548,13 +557,14 @@ export class ConfigComponent extends BaseComponent implements OnInit {
           credential: this.input,
           biometrics: [],
           hasBiometrics: 'Disabled',
+          hasAccess: true,
         })
         this.ngZone.run(() => {
           this.whitelistDataSource = new MatTableDataSource<string>(this.whitelist);
           if (this.StorageProvider.getKey('Whitelist').slice(1, 2) === "1") {
-            this.whitelistDisplayedColumns = ['credential', 'biometrics', 'remove'];
+            this.whitelistDisplayedColumns = ['credential', 'biometrics', 'hasAccess', 'remove'];
           } else {
-            this.whitelistDisplayedColumns = ['credential', 'remove'];
+            this.whitelistDisplayedColumns = ['credential', 'hasAccess', 'remove'];
           }
           this.whitelistDataSource.paginator = this.paginator;
         })
@@ -793,7 +803,7 @@ export class ConfigComponent extends BaseComponent implements OnInit {
       this.whitelist.splice(number, 1)
       this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
       this.ngZone.run(() => {
-        this.whitelistDisplayedColumns = ['credential', 'biometrics', 'remove'];
+        this.whitelistDisplayedColumns = ['credential', 'biometrics', 'hasAccess', 'remove'];
         this.whitelistDataSource.paginator = this.paginator;
       })
     }

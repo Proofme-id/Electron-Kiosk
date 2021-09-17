@@ -64,11 +64,13 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   checkingForHappy: boolean;
   singleResult;
   firstScan: boolean;
-  neutralFace: Float32Array;
-  checkedForHappyCount: number = 0;
+  face: Float32Array;
+  checkedForExpressionCount: number = 0;
   showFacialInfo: boolean;
   facialInfoText: string;
-  
+  testing: boolean = true; // <-- CHANGE WHEN BUILDING OR PUSHING TO GITHUB.
+  checkInterval: number = this.testing ? 2500 : 100;
+  checkingForNeutral: boolean;
 
   constructor(
     private router: Router,
@@ -214,6 +216,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
               const result = await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor().withFaceExpressions();
               if (result) {
                 const bestMatch = FaceMatcher.findBestMatch(result.descriptor);
+                var bestMatchAccess = this.Access(bestMatch)
                 this.showFacialInfo = true;
                 switch (true) {
                   case result.alignedRect.box.height < 160:
@@ -230,10 +233,28 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                     console.log("Not in the middle of the screen.")
                     return;
                   }
-                  case result.expressions.neutral < 0.9 && !this.checkingForHappy:
-                    console.log("Please show neutral face", result.expressions.happy);
-                    this.facialInfoText = "Show a neutral face"
+                  case bestMatchAccess === false: {
+                    console.log("Face on system but user has no access.")
+                    this.log.warn('userNoAccessDenied ' + bestMatch.label)
+                    this.falseLogin = true;
+                    this.showFacialInfo = false;
+                    setTimeout(() => {
+                      this.resetFacialChecking();
+                      this.falseLogin = undefined;
+                      this.neutral = true;
+                    }, 1000);
                     return;
+                  }
+                  case (result.expressions.neutral < 0.9 || result.expressions.happy < 0.9) && this.checkingForNeutral === undefined && this.checkingForHappy === undefined: {
+                    this.face = result.descriptor;
+                    console.log("Saved face");
+                    result.expressions.neutral > 0.9 ? this.checkingForHappy = true : this.checkingForNeutral = true;
+                    console.log("check happy: ", this.checkingForHappy)
+                    console.log("check neutral: ", this.checkingForNeutral)
+                    console.log("Checking for expression: ", this.checkingForHappy === true ? "Happy" : "Neutral")
+                    this.facialInfoText = (this.checkingForHappy === true ? "Smile!" : "Look neutral!")
+                    break;
+                  }
                   case bestMatch.distance > this.recogniseDistance: {
                     console.log("Face not on system.")
                     this.log.warn('unknownFacialDenied ')
@@ -246,19 +267,13 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                     }, 1000);
                     return;
                   }
-                  case !this.checkingForHappy:
-                    this.neutralFace = result.descriptor;
-                    console.log("Saved neutral face", result.expressions.neutral);
-                    this.checkingForHappy = true;
-                    console.log("Checking for happy");
-                    this.facialInfoText = "Smile!"
-                    break;
                   default:
-                    console.log("Close enough to camera and checking for happy expression.")
+                    console.log("Close enough to camera and checking for expression.")
                     break;
                 }
 
-                if (result.expressions.happy > 0.9) {
+                console.log("euclidean distance: ", faceapi.euclideanDistance(this.face, result.descriptor))
+                if (((result.expressions.happy > 0.9 && this.checkingForHappy) || (result.expressions.neutral > 0.9 && this.checkingForNeutral)) && faceapi.euclideanDistance(this.face, result.descriptor) < this.recogniseDistance ) {
                   this.onCooldown = true;
                   this.neutral = false;
                   this.falseLogin = false;
@@ -273,29 +288,29 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                   return;
                 }
 
-                if (this.checkedForHappyCount === 5) {
+                if (this.checkedForExpressionCount === 5) {
                   console.log("Checked smile too many times, reset");
-                  this.checkingForHappy = false;
-                  this.checkedForHappyCount = 0;
+                  this.resetFacialChecking();
                   return;
                 } else {
-                  this.checkedForHappyCount += 1;
+                  this.checkedForExpressionCount += 1;
                 }
-                console.log("Times checked for smile.", this.checkedForHappyCount);
+                console.log("Times checked for expression.", this.checkedForExpressionCount);
               } else {
                 this.showFacialInfo = false
               }
             }
           }
-        }, 2500)
+        }, this.checkInterval)
       });
     });
   }
 
   resetFacialChecking(): void {
-    this.neutralFace = undefined;
+    this.face = undefined;
     this.checkingForHappy = undefined;
-    this.checkedForHappyCount = 0;
+    this.checkingForNeutral = undefined;
+    this.checkedForExpressionCount = 0;
   }
 
   openDoor(slot, type) {
@@ -667,7 +682,16 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                 this.hideEmailQR = false;
                 user.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors;
                 this.log.info("userAddedBiometrics ", data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value)
+                this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
+                return;
               }
+            })
+
+            this.whitelist.push({
+              credential: data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value,
+              biometrics: data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors,
+              hasBiometrics: 'Enabled',
+              hasAccess: false,
             })
             this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
             break;
@@ -684,7 +708,16 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                 this.hideEmailQR = false;
                 user.biometrics = data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors
                 this.log.info("userAddedBiometrics ", data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value)
+                this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
+                return;
               }
+            })
+
+            this.whitelist.push({
+              credential: data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value,
+              biometrics: data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors,
+              hasBiometrics: 'Enabled',
+              hasAccess: false,
             })
             this.StorageProvider.setKey('whitelistedUsers', this.whitelist)
             break;
@@ -752,16 +785,27 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
   whitelistedExistsAndIsCorrect(whitelist: any, data: any, type: number): number {
     for (let whitelisted of whitelist) {
       if (type === 1) {
-        if (whitelisted.credential === data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value) {
+        if (whitelisted.credential === data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value && whitelisted.hasAccess === true) {
           return 1;
         }
       }
       else if (type === 0) {
-        if (whitelisted.credential === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value) {
+        if (whitelisted.credential === data.credentialObject.credentials.EMAIL.credentials.EMAIL.credentialSubject.credential.value && whitelisted.hasAccess === true) {
           return 1;
         }
       }
     }
     return 0;
+  }
+
+  Access(bestMatch: any): boolean {
+    let result = false;
+    this.whitelist.forEach(user => {
+    if (user.credential === bestMatch.label && user.hasAccess === true) {
+        result = true;
+      }
+    });
+
+    return result;
   }
 }
