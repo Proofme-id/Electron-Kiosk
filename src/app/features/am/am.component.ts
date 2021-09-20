@@ -173,7 +173,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
       this.streamTracker = stream;
       document.getElementById("config-button").classList.remove("display-none")
       this.video.play().then(() => {
-          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser);
+        this.faceCheck(labeledDescriptors, users, FaceMatcher, browser);
       });
     });
   }
@@ -182,19 +182,19 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     switch (true) {
       case this.falseLogin === false || this.falseLogin === true: {
         setTimeout(() => {
-          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
         }, this.checkInterval);
         return;
       }
       case this.pauseInterval === true: {
         setTimeout(() => {
-          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
         }, this.checkInterval);
         return;
       }
       case this.onCooldown === true: {
         setTimeout(() => {
-          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
         }, this.checkInterval);
         return;
       }
@@ -231,38 +231,64 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           this.neutral = true;
         }, 1000);
         setTimeout(() => {
-          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+          this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
         }, this.checkInterval);
         return;
       }
       default: {
-        const result = await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor().withFaceExpressions();
-        if (result) {
+        const results = await faceapi.detectAllFaces(this.video).withFaceLandmarks().withFaceDescriptors().withFaceExpressions();
+        let result = null;
+        if (results.length > 0) {
+          // console.log("Detected faces:", results.length);
+          result = results.reduce(function(prev, current) {
+            return (prev.alignedRect.box.height > current.alignedRect.box.height) ? prev : current
+          });
+          // result = result.withFaceLandmarks().withFaceDescriptor().withFaceExpressions();
+          
+        // }
+        // // const result = await faceapi.detectSingleFace(this.video).withFaceLandmarks().withFaceDescriptor().withFaceExpressions();
+        // if (result) {
+          // <-------------> //
+          //    DRAW BOX     //
+          // // <-------------> //
+          const vWidth = this.streamTracker.getVideoTracks()[0].getSettings().width;
+          // const vHeight = this.streamTracker.getVideoTracks()[0].getSettings().height;
+          // const canvas = document.getElementById('overlay') as HTMLCanvasElement
+
+          // const displaySize = { width: vWidth, height: vHeight };
+          // faceapi.matchDimensions(canvas, displaySize);
+
+          // const resizedDetections = faceapi.resizeResults(result.detection, displaySize);
+          // faceapi.draw.drawDetections(canvas, resizedDetections);
+          // <-------------> //
+          //    DRAW BOX     //
+          // <-------------> //
           const bestMatch = FaceMatcher.findBestMatch(result.descriptor);
           var bestMatchAccess = this.Access(bestMatch)
           this.showFacialInfo = true;
+          const center = vWidth / 2;
+          const boxCenter = result.alignedRect.box.x + (result.alignedRect.box.width / 2)
+          // console.log("boxCenter: ", boxCenter)
+
           switch (true) {
             case result.alignedRect.box.height < 120:
-              // console.log("Please move closer to camera.")
               this.facialInfoText = "Move closer to the camera"
               setTimeout(() => {
                 this.resetFacialChecking();
                 this.neutral = true;
               }, 1000);
               setTimeout(() => {
-                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
               }, this.checkInterval);
               return;
-            case result.alignedRect.box.x < 115 || result.alignedRect.box.x > 260: {
+            case (boxCenter) < (center - 120) || (boxCenter) > (center + 100): {
               this.facialInfoText = "Move to the middle"
-              // console.log("Not in the middle of the screen.")
               setTimeout(() => {
-                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
               }, this.checkInterval);
               return;
             }
             case bestMatchAccess === false: {
-              // console.log("Face on system but user has no access.")
               this.log.warn('userNoAccessDenied ' + bestMatch.label)
               if (this.falseLogin === undefined) {
                 this.falseLogin = true;
@@ -274,7 +300,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                 this.neutral = true;
               }, 3000);
               setTimeout(() => {
-                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
               }, this.checkInterval);
               return;
             }
@@ -289,7 +315,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
               break;
             }
             case bestMatch.distance > this.recogniseDistance: {
-              console.log("Face not on system.")
+              // console.log("Face not on system.")
               this.log.warn('unknownFacialDenied ')
               if (this.falseLogin === undefined) {
                 this.falseLogin = true;
@@ -301,12 +327,12 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                 this.neutral = true;
               }, 3000);
               setTimeout(() => {
-                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+                this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
               }, this.checkInterval);
               return;
             }
             default:
-              // console.log("Close enough to camera and checking for expression.")
+              this.facialInfoText = (this.checkingForHappy === true ? "Smile!" : "Look neutral!")
               break;
           }
 
@@ -324,7 +350,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
               this.onCooldown = false;
             }, this.accessCooldown);
             setTimeout(() => {
-              this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+              this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
             }, this.checkInterval);
             return;
           }
@@ -333,7 +359,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
             // console.log("Checked smile too many times, reset");
             this.resetFacialChecking();
             setTimeout(() => {
-              this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+              this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
             }, this.checkInterval);
             return;
           } else {
@@ -347,7 +373,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
     }
 
     setTimeout(() => {
-      this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)      
+      this.faceCheck(labeledDescriptors, users, FaceMatcher, browser)
     }, this.checkInterval);
   }
   resetFacialChecking(): void {
