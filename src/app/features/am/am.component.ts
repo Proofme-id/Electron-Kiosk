@@ -242,7 +242,7 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
           var bestMatchAccess = this.Access(bestMatch)
           this.showFacialInfo = true;
           switch (true) {
-            case result.alignedRect.box.height < 160:
+            case result.alignedRect.box.height < 140:
               // console.log("Please move closer to camera.")
               this.facialInfoText = "Move closer to the camera"
               setTimeout(() => {
@@ -730,7 +730,6 @@ export class AmComponent extends BaseComponent implements OnInit, AfterViewInit 
                 return;
               }
             })
-
             this.whitelist.push({
               credential: data.credentialObject.credentials.PHONE_NUMBER.credentials.PHONE_NUMBER.credentialSubject.credential.value,
               biometrics: data.credentialObject.credentials.BIOMETRICS_FACE_VECTORS.credentialSubject.credential.value.vectors,
